@@ -179,7 +179,7 @@
         #hint-close-btn { background: #FF5722; color: white; box-shadow: 0 4px 0 #CD5221; }
 
         /* Screens */
-        #start-screen, #game-over-screen {
+        #start-screen, #game-over-screen, #leaderboard-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9);
             display: flex; flex-direction: column; justify-content: center;
@@ -253,14 +253,88 @@
         .diff-4 { background: #E91E63; box-shadow: 0 4px 0 #C2185B; } /* Rakete */
         .diff-5 { background: #9C27B0; box-shadow: 0 4px 0 #7B1FA2; } /* Einstein */
 
-        #game-over-btn {
+        #game-over-btn, #leaderboard-btn, #save-score-btn {
             background: #4CAF50; border: none; padding: 15px 40px;
             font-size: 2rem; font-family: 'Fredoka One', cursive; color: white;
             border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32;
             transition: transform 0.1s;
+            margin-top: 10px;
         }
-        #game-over-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2E7D32; }
+        #game-over-btn:active, #leaderboard-btn:active, #save-score-btn:active {
+            transform: translateY(4px); box-shadow: 0 2px 0 #2E7D32;
+        }
+        
+        #leaderboard-btn {
+            background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: 1.5rem; padding: 10px 30px;
+        }
+        #leaderboard-btn:active {
+            box-shadow: 0 2px 0 #F57C00;
+        }
 
+        /* Highscore Input Styles */
+        #highscore-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        #player-name-input {
+            padding: 10px 15px;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            border: 3px solid #FFD700;
+            margin-bottom: 10px;
+            text-align: center;
+            font-family: 'Fredoka One', cursive;
+            width: 80%;
+            max-width: 300px;
+            outline: none;
+        }
+
+        /* Leaderboard Styles */
+        #leaderboard-list {
+            list-style: none;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            margin-bottom: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .leaderboard-entry {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2rem;
+            align-items: center;
+        }
+        
+        .rank-badge {
+            background: #FFD700;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-family: 'Fredoka One', cursive;
+        }
+        
+        .entry-name { flex-grow: 1; text-align: left; font-weight: bold; }
+        .entry-score { color: #FFD700; font-family: 'Fredoka One', cursive; font-size: 1.4rem; }
+        .entry-date { font-size: 0.8rem; color: #aaa; margin-left: 10px; display: none; } /* Datum optional versteckt auf mobile */
+        
         /* Mobile Controls */
         #mobile-controls {
             position: absolute; bottom: 80px; left: 0; width: 100%; height: 120px;
@@ -296,6 +370,8 @@
             #question-wrapper { top: 10%; } 
             #question-box { font-size: 2rem; padding: 10px 25px; }
             .diff-btn { font-size: 1.1rem; padding: 10px 15px; }
+            .leaderboard-entry { font-size: 1rem; padding: 8px; }
+            .rank-badge { width: 25px; height: 25px; font-size: 0.9rem; }
         }
         
         .hidden { display: none !important; }
@@ -355,6 +431,9 @@
             <button class="diff-btn diff-5" onclick="startGame(4)">Einstein-Warp 🌌<span>Geteilt + 3 Sek. Timer</span></button>
         </div>
         
+        <!-- Button zur Bestenliste -->
+        <button id="leaderboard-btn" onclick="showLeaderboard()">🏆 Ruhmeshalle</button>
+        
         <!-- Steuerung Toggle -->
         <div style="margin-top: 15px; text-align: center;">
             <label for="touch-toggle" style="color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -364,13 +443,32 @@
             <p id="touch-info" style="font-size: 0.9rem; color: #aaa; margin: 5px 0 0 0; max-width: 300px;">(Wird auf kleinen Bildschirmen automatisch aktiviert)</p>
         </div>
     </div>
+    
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="hidden">
+        <h1>Ruhmeshalle 🏆</h1>
+        <ul id="leaderboard-list">
+            <!-- Einträge werden hier dynamisch eingefügt -->
+        </ul>
+        <button onclick="showStartScreen()" style="background: #607D8B; box-shadow: 0 6px 0 #455A64;">Zurück</button>
+    </div>
 
     <div id="game-over-screen" class="hidden">
         <h1>Spiel Vorbei!</h1>
         <p>Du hast <span id="final-score" style="color: #FFD700; font-weight: bold;">0</span> Punkte erreicht.</p>
+        
+        <!-- Highscore Input -->
+        <div id="highscore-input-container" class="hidden">
+            <p style="color: #FFD700; font-size: 1.4rem;">Neuer Highscore! 🎉</p>
+            <input type="text" id="player-name-input" placeholder="Dein Name" maxlength="10">
+            <button id="save-score-btn" onclick="submitHighscore()">Speichern 💾</button>
+        </div>
+
         <p id="motivation-text">Dein Coach analysiert dein Spiel... ✨</p>
         
-        <button id="game-over-btn" onclick="showStartScreen()">Zum Menü</button>
+        <div id="game-over-buttons">
+            <button id="game-over-btn" onclick="showStartScreen()">Zum Menü</button>
+        </div>
     </div>
     
     <!-- Hint Overlay -->
@@ -405,6 +503,7 @@
     const ttsBtn = document.getElementById('tts-btn');
     const startScreen = document.getElementById('start-screen');
     const gameOverScreen = document.getElementById('game-over-screen');
+    const leaderboardScreen = document.getElementById('leaderboard-screen');
     const finalScoreEl = document.getElementById('final-score');
     const motivationTextEl = document.getElementById('motivation-text'); 
     const hintOverlay = document.getElementById('hint-overlay');
@@ -413,6 +512,10 @@
     const hintBtn = document.getElementById('hint-btn');
     const themeNameDisplay = document.getElementById('current-theme-name');
     const gameContainer = document.getElementById('game-container');
+    const highscoreInputContainer = document.getElementById('highscore-input-container');
+    const playerNameInput = document.getElementById('player-name-input');
+    const leaderboardList = document.getElementById('leaderboard-list');
+    const gameOverButtons = document.getElementById('game-over-buttons');
 
     // --- API Configuration ---
     const API_MODEL = "gemini-2.5-flash-preview-09-2025";
@@ -481,6 +584,75 @@
     let multiplier = 1;
     let multiplierTasksLeft = 0;
     
+    // --- Leaderboard Logic ---
+    function getLeaderboard() {
+        return JSON.parse(localStorage.getItem('einmaleins_leaderboard')) || [];
+    }
+
+    function saveToLeaderboard(name, score) {
+        let list = getLeaderboard();
+        const date = new Date().toLocaleDateString();
+        list.push({ name: name || "Spieler", score: score, date: date });
+        
+        // Sortieren nach Punktzahl (absteigend)
+        list.sort((a, b) => b.score - a.score);
+        
+        // Nur Top 10 behalten
+        if (list.length > 10) list = list.slice(0, 10);
+        
+        localStorage.setItem('einmaleins_leaderboard', JSON.stringify(list));
+        return list;
+    }
+
+    function isHighscore(score) {
+        if (score === 0) return false;
+        const list = getLeaderboard();
+        if (list.length < 10) return true;
+        // Ist der Score höher als der schlechteste in der Top 10?
+        return score > list[list.length - 1].score;
+    }
+
+    function renderLeaderboard() {
+        const list = getLeaderboard();
+        leaderboardList.innerHTML = "";
+        
+        if (list.length === 0) {
+            leaderboardList.innerHTML = "<li style='color: white; text-align: center;'>Noch keine Einträge. Spiel jetzt!</li>";
+            return;
+        }
+
+        list.forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.className = 'leaderboard-entry';
+            li.innerHTML = `
+                <div class="rank-badge">${index + 1}</div>
+                <div class="entry-name">${entry.name}</div>
+                <div class="entry-score">${entry.score}</div>
+            `;
+            leaderboardList.appendChild(li);
+        });
+    }
+
+    function showLeaderboard() {
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        leaderboardScreen.classList.remove('hidden');
+        renderLeaderboard();
+    }
+
+    function submitHighscore() {
+        const name = playerNameInput.value.trim().substring(0, 10); // Max 10 chars
+        if (name) {
+            saveToLeaderboard(name, score);
+            // Nach dem Speichern direkt zur Ruhmeshalle
+            highscoreInputContainer.classList.add('hidden');
+            showLeaderboard();
+        } else {
+            alert("Bitte gib einen Namen ein!");
+        }
+    }
+
+
     // --- Setup ---
     function resize() {
         canvas.width = window.innerWidth;
@@ -527,9 +699,12 @@
 
     // --- Initialisierung ---
     window.onload = () => {
-        resize(); // <--- FIX: Resize immediately on load
-        highscore = parseInt(localStorage.getItem('einmaleins_highscore')) || 0;
+        resize(); 
+        // Initial Local Highscore for HUD (Best in list or saved value)
+        const list = getLeaderboard();
+        highscore = list.length > 0 ? list[0].score : (parseInt(localStorage.getItem('einmaleins_highscore')) || 0);
         highscoreEl.innerText = highscore;
+        
         loadTouchControlsState(); 
         if (!gameLoopId) {
             gameLoopId = requestAnimationFrame(loop);
@@ -1056,6 +1231,7 @@
         gameLoopId = null;
         startScreen.classList.remove('hidden');
         gameOverScreen.classList.add('hidden');
+        leaderboardScreen.classList.add('hidden');
         questionWrapper.classList.add('hidden');
         updateMobileControlsVisibility();
     }
@@ -1115,7 +1291,10 @@
         scoreEl.innerText = score; livesEl.innerText = lives;
         
         gameRunning = true;
-        startScreen.classList.add('hidden'); gameOverScreen.classList.add('hidden'); hintOverlay.classList.add('hidden'); 
+        startScreen.classList.add('hidden'); 
+        gameOverScreen.classList.add('hidden'); 
+        leaderboardScreen.classList.add('hidden');
+        hintOverlay.classList.add('hidden'); 
         generateLevel(); updateMobileControlsVisibility();
         if (!gameLoopId) { gameLoopId = requestAnimationFrame(loop); }
     }
@@ -1241,7 +1420,25 @@
     async function gameOver() {
         gameRunning = false;
         finalScoreEl.innerText = score;
-        if (score > highscore) { highscore = score; localStorage.setItem('einmaleins_highscore', highscore); highscoreEl.innerText = highscore; }
+        
+        // Check for Highscore (Top 10)
+        if (isHighscore(score)) {
+            highscoreInputContainer.classList.remove('hidden');
+            gameOverButtons.classList.add('hidden'); // Hide buttons while inputting name
+            playerNameInput.value = ""; // Reset input
+            playerNameInput.focus();
+        } else {
+             highscoreInputContainer.classList.add('hidden');
+             gameOverButtons.classList.remove('hidden');
+        }
+
+        // Legacy Highscore update (for HUD display consistency)
+        if (score > highscore) {
+             highscore = score;
+             localStorage.setItem('einmaleins_highscore', highscore);
+             highscoreEl.innerText = highscore;
+        }
+
         questionWrapper.classList.add('hidden'); 
         gameOverScreen.classList.remove('hidden');
         motivationTextEl.innerText = "Dein Coach analysiert dein Spiel... ✨";
