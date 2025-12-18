@@ -2,815 +2,248 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Wortarten-Runner: Low Poly Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Canvas-Spiele Sammlung</title>
+    <!-- Tailwind CSS laden für modernes, responsives Design -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Benutzung der Inter-Schriftart */
         body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #87CEEB;
-            user-select: none;
-            -webkit-user-select: none;
+            font-family: 'Inter', sans-serif;
+            /* Heller, freundlicher Hintergrund */
+            background-color: #f0f4f8; 
         }
-
-        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between;
-            z-index: 10;
+        /* Helles Lila für die Kopfzeile */
+        .header-bg {
+            background-color: #6d28d9; /* Purple-700 */
+            box-shadow: 0 6px 15px -3px rgba(109, 40, 217, 0.4);
         }
-
-        /* HUD oben */
-        #hud-top {
-            padding: 20px; display: flex; justify-content: space-between;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
-            color: white; font-size: 1.4rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            font-family: 'Segoe UI', sans-serif; font-weight: bold; pointer-events: auto;
-        }
-
-        .hud-box {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
-            padding: 10px 20px;
-            border-radius: 20px;
-            border: 2px solid rgba(255,255,255,0.5);
-            display: flex; align-items: center; gap: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .hud-icon { width: 32px; height: 32px; display: flex; align-items: center; }
-        svg { width: 100%; height: 100%; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3)); }
-
-        /* Shop Button */
-        #shop-btn-container {
-            position: absolute; right: 20px; top: 100px;
-            pointer-events: auto; display: none; 
-            flex-direction: column; align-items: center; gap: 5px; z-index: 2000;
-        }
-
-        #shop-btn {
-            background: linear-gradient(135deg, #FF9800, #F57C00);
-            border: none; color: white; padding: 15px 30px;
-            font-size: 1.2rem; border-radius: 50px; cursor: pointer;
-            font-weight: bold; font-family: 'Segoe UI', sans-serif;
-            box-shadow: 0 4px 15px rgba(245, 124, 0, 0.4);
-            text-transform: uppercase; letter-spacing: 1px;
+        /* Stil für die Spielkarten */
+        .game-card {
             transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 1.5rem; /* Stärkere Abrundung */
         }
-        #shop-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 124, 0, 0.6); }
-        #shop-btn:active { transform: translateY(2px); }
-
-        .key-hint {
-            font-size: 0.9rem; color: white; background: rgba(0,0,0,0.4);
-            padding: 4px 10px; border-radius: 10px; backdrop-filter: blur(4px);
+        .game-card:hover {
+            transform: translateY(-8px); /* Mehr Bounce-Effekt */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-
-        /* SHOP OVERLAY */
-        #shop-overlay {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 90%; max-width: 900px; height: 85%;
-            background: #ffffff; border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            display: none; pointer-events: auto; flex-direction: column;
-            overflow: hidden; opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-family: 'Segoe UI', sans-serif; z-index: 3000;
+        /* Stil für den aktiven Kategorie-Button wird durch JS gesetzt */
+        .category-button {
+            transition: background-color 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
         }
-
-        #shop-overlay.open { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-
-        .shop-header {
-            background: #F8F9FA; padding: 20px 30px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #E9ECEF;
+        .category-button:hover:not(.bg-purple-500) {
+             transform: translateY(-2px); /* Leichter Schwebe-Effekt */
         }
-        .shop-header h2 { margin: 0; color: #1A202C; font-size: 1.8rem; }
-
-        .close-shop {
-            background: #E2E8F0; color: #4A5568; border: none;
-            width: 40px; height: 40px; border-radius: 12px;
-            font-size: 1.2rem; cursor: pointer; transition: all 0.2s;
-        }
-        .close-shop:hover { background: #CBD5E0; }
-
-        #shop-content { flex: 1; overflow-y: auto; padding: 30px; background: #fff; }
-
-        #shop-list {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;
-        }
-
-        .shop-card {
-            background: #fff; border: 1px solid #E2E8F0; border-radius: 16px;
-            padding: 20px; display: flex; flex-direction: column; align-items: center;
-            transition: all 0.2s; position: relative;
-        }
-        .shop-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #CBD5E0; }
-        .shop-card.affordable { border: 2px solid #48BB78; }
-        .shop-card.owned { background: #F0FFF4; border-color: #48BB78; opacity: 0.8; }
-
-        .card-icon { font-size: 3.5rem; margin-bottom: 15px; }
-        .card-title { font-weight: 700; color: #2D3748; margin-bottom: 5px; }
-        .card-floor { font-size: 0.85rem; color: #718096; background: #EDF2F7; padding: 4px 10px; border-radius: 6px; margin-bottom: 15px; }
-
-        .card-btn {
-            width: 100%; padding: 12px; border: none; border-radius: 10px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-        }
-        .btn-buy { background: #48BB78; color: white; }
-        .btn-buy:hover { background: #38A169; }
-        .btn-buy:disabled { background: #E2E8F0; color: #A0AEC0; cursor: not-allowed; }
-        .btn-owned { background: transparent; color: #38A169; font-size: 1.2rem; pointer-events: none; }
-
-        #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
-
-        #feedback-msg {
-            position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.5rem; font-weight: 700; color: white;
-            background: rgba(0, 0, 0, 0.8); padding: 15px 30px; border-radius: 50px;
-            border: 2px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);
-            opacity: 0; transition: opacity 0.3s; font-family: 'Segoe UI', sans-serif;
-            pointer-events: none; text-align: center; max-width: 90%; z-index: 200;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-
-        #task-bar {
-            background: white; margin: 0 20px 20px; padding: 15px 30px;
-            border-radius: 16px; text-align: center; font-size: 1.2rem; color: #4A5568;
-            font-weight: 600; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .highlight { color: #E53E3E; font-weight: 800; font-size: 1.4rem; }
-
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; z-index: 100; pointer-events: auto; text-align: center;
-        }
-        h1 { font-size: 4rem; margin-bottom: 10px; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        
-        button.start-game-btn {
-            background: #fff; color: #5a67d8; border: none;
-            padding: 16px 48px; font-size: 1.5rem; cursor: pointer; font-weight: 800;
-            border-radius: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        button.start-game-btn:hover { transform: scale(1.05); }
-
-        #joystick-zone { position: absolute; bottom: 40px; left: 30px; width: 150px; height: 150px; z-index: 50; display: none; pointer-events: auto; }
-        #jump-btn {
-            position: absolute; bottom: 60px; right: 40px; width: 80px; height: 80px;
-            background: rgba(255, 255, 255, 0.3); border-radius: 50%; border: 2px solid rgba(255,255,255,0.5);
-            backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; 
-            pointer-events: auto; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 50; padding: 20px;
-        }
-        #jump-btn:active { background: rgba(255, 255, 255, 0.5); transform: scale(0.95); }
     </style>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js"
-            }
-        }
-    </script>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-    <div id="game-container"></div>
+    <!-- Header / Navigationsleiste (Freundliches Purple) -->
+    <header class="header-bg text-white">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center">
+            <h1 class="text-4xl font-extrabold tracking-tight mb-2 sm:mb-0">
+                <span class="text-cyan-300">🎉 Coole</span> Lernspiele!
+            </h1>
+            <p class="text-base opacity-90">Klicke, lerne, spiele! - Für die 6. Klasse</p>
+        </div>
+    </header>
 
-    <div id="ui-layer">
-        <div id="hud-top">
-            <div class="hud-box">
-                <div class="hud-icon" id="coin-svg"></div>
-                <div id="coin-text">0</div>
+    <!-- Hauptinhalt der Seite -->
+    <main class="flex-grow p-4 sm:p-6 lg:p-10">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center sm:text-left">Wähle dein Fach:</h2>
+
+            <!-- Kategorie-Filter (Hell und Abgerundet) -->
+            <div id="category-filter" class="flex flex-wrap gap-3 mb-10 p-4 bg-white rounded-3xl shadow-lg border border-gray-100 justify-center sm:justify-start">
+                <!-- Die Kategorie-Buttons werden hier per JavaScript eingefügt -->
             </div>
-            <div class="hud-box">
-                <div class="hud-icon" id="task-svg"></div>
-                <div id="task-info">...</div>
+
+            <!-- Grid für die Spielkarten -->
+            <div id="game-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <!-- Die Spielkarten werden hier per JavaScript eingefügt -->
+            </div>
+
+            <!-- Info Box für Nutzer (wichtig) -->
+            <div class="mt-16 bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded-lg shadow-md">
+                <div class="flex items-center">
+                    <svg class="h-6 w-6 text-yellow-600 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="text-lg font-semibold text-yellow-800">So funktioniert's</h3>
+                </div>
+                <p class="mt-2 text-sm text-yellow-700">
+                    Die Spiele unten sind Platzhalter. Um ein Spiel zu aktivieren, ersetze den Platzhalter-Link (`#`) in der JavaScript-Variable `games` durch den tatsächlichen Dateipfad deines Canvas-Spiels.
+                </p>
             </div>
         </div>
+    </main>
 
-        <div id="shop-btn-container">
-            <button id="shop-btn">🛍️ Shop</button>
-            <div class="key-hint" id="shop-key-hint">Taste 'E'</div>
-        </div>
+    <!-- Footer -->
+    <footer class="header-bg text-white text-center py-4 text-sm opacity-90">
+        &copy; 2025 Gemini Arcade. Erstellt mit dem Gemini Modell.
+    </footer>
 
-        <div id="shop-overlay">
-            <canvas id="confetti-canvas"></canvas>
-            <div class="shop-header">
-                <h2>Einrichtungshaus</h2>
-                <button class="close-shop" id="close-shop">✕</button>
-            </div>
-            <div id="shop-content">
-                <div id="shop-list"></div>
-            </div>
-        </div>
-
-        <div id="feedback-msg"></div>
-        <div id="joystick-zone"></div>
-        <div id="jump-btn"></div>
-        <div id="task-bar">Lade Welt...</div>
-    </div>
-
-    <div id="start-screen">
-        <h1>Wort-Runner 3D</h1>
-        <p style="color: #333; border-radius: 12px; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-           1. Sammle die gesuchten Wortarten.<br>
-           2. Verdiene Münzen.<br>
-           3. Richte dein Haus ein!
-        </p>
-        <button class="start-game-btn" id="start-btn">LOS GEHT'S</button>
-    </div>
-
-    <script type="module">
-        import * as THREE from 'three';
-
-        // --- SVGs ---
-        const SVGS = {
-            coin: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFC107" stroke="#FF9800" stroke-width="4"/><text x="50" y="70" font-family="Arial" font-size="50" font-weight="800" text-anchor="middle" fill="#B36B00">€</text></svg>`,
-            target: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#E53E3E" stroke-width="8"/><circle cx="50" cy="50" r="25" fill="none" stroke="#E53E3E" stroke-width="8"/><circle cx="50" cy="50" r="10" fill="#E53E3E"/></svg>`,
-            jump: `<svg viewBox="0 0 24 24"><path fill="white" d="M12 4l-8 8h6v8h4v-8h6z"/></svg>`
-        };
-
-        const WORDS = [
-            { text: "Haus", type: "Nomen", color: "#e74c3c" }, { text: "Baum", type: "Nomen", color: "#e74c3c" },
-            { text: "Katze", type: "Nomen", color: "#e74c3c" }, { text: "Freude", type: "Nomen", color: "#e74c3c" },
-            { text: "Auto", type: "Nomen", color: "#e74c3c" }, { text: "Tisch", type: "Nomen", color: "#e74c3c" },
-            { text: "Laufen", type: "Verb", color: "#3498db" }, { text: "Singen", type: "Verb", color: "#3498db" },
-            { text: "Essen", type: "Verb", color: "#3498db" }, { text: "Schlafen", type: "Verb", color: "#3498db" },
-            { text: "Schnell", type: "Adjektiv", color: "#2ecc71" }, { text: "Groß", type: "Adjektiv", color: "#2ecc71" },
-            { text: "Schön", type: "Adjektiv", color: "#2ecc71" }, { text: "Blau", type: "Adjektiv", color: "#2ecc71" }
+    <script>
+        // Array mit den Spielen. Hier können Sie Ihre Spiele hinzufügen und die Kategorie festlegen.
+        // WICHTIG: Ersetzen Sie '#' durch den tatsächlichen Pfad zur HTML-Datei Ihres Spiels.
+        const games = [
+            {
+                title: "Vokabeltrainer",
+                description: "Trainieren Sie englische Vokabeln im Quiz-Format.",
+                link: "#", 
+                icon: "🗣️",
+                category: "Englisch"
+            },
+            {
+                title: "Asteroid Attack",
+                description: "Ein klassisches Arcade-Spiel (mit englischen Begrifflichkeiten).",
+                link: "#", 
+                icon: "🚀",
+                category: "Englisch"
+            },
+            {
+                title: "Snake Game",
+                description: "Die klassische Schlange, die Punkte isst und dabei wächst.",
+                link: "#", 
+                icon: "🐍",
+                category: "Mathe" // Kann zur Berechnung der Punkte genutzt werden
+            },
+            {
+                title: "Kopfrechnen-Blitz",
+                description: "Trainieren Sie Ihre Kopfrechenfähigkeiten gegen die Zeit.",
+                link: "#",
+                icon: "➕",
+                category: "Mathe"
+            },
+            {
+                title: "Memory Match",
+                description: "Decken Sie Kartenpaare mit deutschen Wörtern auf.",
+                link: "#",
+                icon: "🧠",
+                category: "Deutsch" 
+            },
+            {
+                title: "Rechtschreib-Duell",
+                description: "Ein schnelles Spiel zur Verbesserung der deutschen Rechtschreibung.",
+                link: "#",
+                icon: "✍️",
+                category: "Deutsch"
+            },
+            {
+                title: "2D Plattformer",
+                description: "Springen und rennen Sie durch ein Level (Allgemeines Spiel).",
+                link: "#",
+                icon: "🏃",
+                category: "Deutsch" 
+            },
+            {
+                title: "Pong Klon",
+                description: "Der Urvater aller Videospiele. Ein simples Ping-Pong-Duell.",
+                link: "#",
+                icon: "🎾",
+                category: "Mathe" // Kann zur Berechnung der Flugbahn/Winkel genutzt werden
+            }
         ];
 
-        // Möbel Daten
-        const FURNITURE_ITEMS = [
-            { id: 'sofa', name: 'Komfort Sofa', cost: 30, floor: 0, icon: '🛋️', pos: {x: -10, y:0, z: -10}, scale: {x:1, y:1, z:1}, color: 0xc62828 },
-            { id: 'tv', name: 'Smart TV', cost: 50, floor: 0, icon: '📺', pos: {x: 10, y:0, z: -12}, scale: {x:1, y:1, z:1}, color: 0x212121 },
-            { id: 'kitchen', name: 'Küche', cost: 80, floor: 0, icon: '🍳', pos: {x: 12, y:0, z: 10}, scale: {x:1, y:1, z:1}, color: 0xffffff },
-            { id: 'bed', name: 'Traumbett', cost: 60, floor: 1, icon: '🛏️', pos: {x: -10, y:0, z: -10}, scale: {x:1, y:1, z:1}, color: 0x1565c0 },
-            { id: 'bath', name: 'Whirlpool', cost: 40, floor: 1, icon: '🛁', pos: {x: 10, y:0, z: 10}, scale: {x:1, y:1, z:1}, color: 0xe0f7fa },
-            { id: 'plant', name: 'Zimmerpalme', cost: 20, floor: 1, icon: '🌴', pos: {x: 12, y:0, z: -10}, scale: {x:1, y:1, z:1}, color: 0x2e7d32 },
-            { id: 'parasol', name: 'Sonnenschirm', cost: 30, floor: 2, icon: '⛱️', pos: {x: 0, y:0, z: 0}, scale: {x:1, y:1, z:1}, color: 0xffeb3b },
-            { id: 'telescope', name: 'Teleskop', cost: 100, floor: 2, icon: '🔭', pos: {x: -10, y:0, z: 10}, scale: {x:1, y:1, z:1}, color: 0x9c27b0 }
-        ];
+        const gameListContainer = document.getElementById('game-list');
+        const categories = ["Alle", "Mathe", "Deutsch", "Englisch"];
+        let activeCategory = "Alle";
 
-        let boughtItems = [];
-        const TASKS = ["Nomen", "Verb", "Adjektiv"];
-        const TILE_SIZE = 15; const GRID_SIZE = 30; const HOUSE_SIZE = 40; const FLOOR_HEIGHT = 8; 
-
-        let camera, scene, renderer;
-        let playerVelocity = new THREE.Vector3(); 
-        let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false;
-        let prevTime = performance.now();
-        let activeWords = []; let collisionObjects = []; let collisionBoxes = []; let walkablePaths = []; 
-        let currentTask = ""; let coins = 0; let isGameActive = false; let isTouchDevice = false; let isShopOpen = false;
-        let playerGroup; let playerLimbs = {}; let walkCycle = 0;
-        let joystick = { active: false, drag: false, originX: 0, originY: 0, dx: 0, dy: 0 };
-        let audioCtx; let furnitureMeshes = {}; let pixelTextures = {}; 
-        let verticalVelocity = 0; let isGrounded = false; const GRAVITY = 60.0; const JUMP_FORCE = 25.0;
-        let camOffset = new THREE.Vector3(0, 8, 14); let feedbackTimeout; 
-
-        // UI Elemente
-        const coinTextEl = document.getElementById('coin-text');
-        const shopBtnCont = document.getElementById('shop-btn-container');
-        const shopOverlay = document.getElementById('shop-overlay');
-        const shopList = document.getElementById('shop-list');
-        const feedbackEl = document.getElementById('feedback-msg');
-        const taskBar = document.getElementById('task-bar');
-        const joystickZone = document.getElementById('joystick-zone');
-        const jumpBtn = document.getElementById('jump-btn');
-
-        document.getElementById('coin-svg').innerHTML = SVGS.coin;
-        document.getElementById('task-svg').innerHTML = SVGS.target;
-        jumpBtn.innerHTML = SVGS.jump;
-
-        // --- EVENT LISTENER ---
-        document.getElementById('start-btn').addEventListener('click', (e) => {
-            e.stopPropagation(); document.getElementById('start-screen').style.display = 'none';
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)(); initGame();
-        });
-
-        const btn = document.getElementById('shop-btn');
-        const handleShopOpen = (e) => { e.preventDefault(); e.stopPropagation(); openShop(); };
-        btn.addEventListener('mousedown', handleShopOpen); btn.addEventListener('touchstart', handleShopOpen); btn.addEventListener('click', handleShopOpen);
-
-        document.getElementById('close-shop').addEventListener('click', (e) => { e.stopPropagation(); closeShop(); });
-        jumpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); attemptJump(); });
-
-        document.addEventListener('mousedown', (e) => { 
-            if(isGameActive && !isShopOpen && e.target.tagName === 'CANVAS' && !isTouchDevice) document.body.requestPointerLock(); 
-        });
-
-        function initGame() {
-            isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-            if (isTouchDevice) { initJoystick(); jumpBtn.style.display = 'flex'; document.getElementById('shop-key-hint').style.display='none'; }
-            generatePixelTextures(); initThreeJS(); buildPlayerHouse(); generateCityGrid(); spawnClouds(); spawnWords(160); setNewTask();
-            isGameActive = true; animate();
+        /**
+         * Erstellt das HTML für eine einzelne Spielkarte.
+         * @param {Object} game - Das Spielobjekt aus dem Array.
+         * @returns {string} Das generierte HTML.
+         */
+        function createGameCard(game) {
+            return `
+                <a href="${game.link}" 
+                   class="game-card block bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition duration-300 ease-in-out border border-gray-100 p-6">
+                    <div class="flex items-start">
+                        <!-- Icon (Platzhalter) -->
+                        <div class="text-5xl mr-4 p-4 bg-cyan-100 rounded-2xl shadow-inner">
+                            ${game.icon}
+                        </div>
+                        
+                        <!-- Details -->
+                        <div class="flex-grow">
+                            <h3 class="text-2xl font-bold text-gray-900 mb-2">${game.title}</h3>
+                            <p class="text-gray-600 text-sm mb-4">${game.description}</p>
+                            
+                            <!-- Call to Action Button (Purple) -->
+                            <button class="w-full bg-purple-600 text-white py-2 px-4 rounded-xl font-semibold hover:bg-purple-700 transition duration-150 ease-in-out shadow-lg hover:shadow-xl">
+                                Spielen!
+                            </button>
+                            <!-- Kategorie Tag -->
+                            <span class="mt-3 inline-block px-3 py-1 text-xs font-medium text-purple-700 bg-purple-200 rounded-full shadow-inner">${game.category}</span>
+                        </div>
+                    </div>
+                </a>
+            `;
         }
 
-        // --- HIGH QUALITY MATERIALS ---
-        function generatePixelTextures() {
-            const createTex = (drawFn) => {
-                const size = 512; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-                const ctx = canvas.getContext('2d'); drawFn(ctx, size);
-                const tex = new THREE.CanvasTexture(canvas); tex.colorSpace = THREE.SRGBColorSpace; return tex;
-            };
-            pixelTextures.grass = createTex((ctx, size) => { ctx.fillStyle = '#4caf50'; ctx.fillRect(0,0,size,size); ctx.fillStyle = '#388e3c'; for(let i=0; i<3000; i++) ctx.fillRect(Math.random()*size, Math.random()*size, 3, 3); });
-            pixelTextures.wood = createTex((ctx, size) => { ctx.fillStyle = '#8D6E63'; ctx.fillRect(0,0,size,size); ctx.fillStyle = '#6D4C41'; for(let i=0;i<20;i++) ctx.fillRect(0, Math.random()*size, size, 2); });
-            pixelTextures.wall = createTex((ctx, size) => { ctx.fillStyle = '#f5f5f5'; ctx.fillRect(0,0,size,size); }); // Clean plaster
+        /**
+         * Setzt die aktive Kategorie und rendert die Spiele neu.
+         * @param {string} category - Die neue aktive Kategorie.
+         */
+        function setCategory(category) {
+            activeCategory = category;
+            renderGames();
         }
 
-        function initThreeJS() {
-            scene = new THREE.Scene(); scene.background = new THREE.Color(0x87CEEB); scene.fog = new THREE.Fog(0x87CEEB, 40, 160);
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            createPlayer();
-            // Licht
-            const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.8); hemiLight.position.set(0, 200, 0); scene.add(hemiLight);
-            const dirLight = new THREE.DirectionalLight(0xfffaed, 1.0); dirLight.position.set(50, 100, 50); 
-            dirLight.castShadow = true; dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048; scene.add(dirLight);
-            
-            renderer = new THREE.WebGLRenderer({ antialias: true }); renderer.setSize(window.innerWidth, window.innerHeight); 
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            document.getElementById('game-container').appendChild(renderer.domElement);
-            window.addEventListener('resize', onWindowResize); document.addEventListener('keydown', onKeyDown); document.addEventListener('keyup', onKeyUp);
-        }
 
-        // --- LOW POLY PLAYER ---
-        function createPlayer() {
-            playerGroup = new THREE.Group();
-            
-            // Materialien
-            const skinMat = new THREE.MeshLambertMaterial({color: 0xffdbac});
-            const shirtMat = new THREE.MeshLambertMaterial({color: 0x3f51b5}); 
-            const pantsMat = new THREE.MeshLambertMaterial({color: 0x333333}); 
+        /**
+         * Rendert alle Spielkarten in den Container basierend auf der aktiven Kategorie.
+         */
+        function renderGames() {
+            if (gameListContainer) {
+                // Filtern der Spiele basierend auf der aktiven Kategorie
+                const filteredGames = activeCategory === "Alle" 
+                    ? games 
+                    : games.filter(game => game.category === activeCategory);
 
-            // Kopf (Kugel)
-            const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
-            const head = new THREE.Mesh(headGeo, skinMat);
-            head.position.y = 1.45;
-            playerGroup.add(head);
-
-            // Augen
-            const eyeGeo = new THREE.SphereGeometry(0.05, 8, 8);
-            const eyeMat = new THREE.MeshBasicMaterial({color:0x000000});
-            const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.12, 1.48, 0.28);
-            const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(0.12, 1.48, 0.28);
-            playerGroup.add(eyeL); playerGroup.add(eyeR);
-
-            // Körper (Kapsel/Zylinder abgerundet)
-            const bodyGeo = new THREE.CylinderGeometry(0.3, 0.35, 0.7, 16);
-            const body = new THREE.Mesh(bodyGeo, shirtMat);
-            body.position.y = 0.9;
-            playerGroup.add(body);
-
-            // Gliedmaßen Funktion
-            const createLimb = (x, y, w, h, mat) => {
-                const geo = new THREE.CylinderGeometry(w, w, h, 12);
-                const mesh = new THREE.Mesh(geo, mat);
-                mesh.position.y = -h/2; 
-                const pivot = new THREE.Group();
-                pivot.position.set(x, y, 0);
-                pivot.add(mesh);
-                playerGroup.add(pivot);
-                return pivot;
-            };
-
-            playerLimbs.armL = createLimb(-0.42, 1.15, 0.1, 0.6, shirtMat);
-            playerLimbs.armR = createLimb(0.42, 1.15, 0.1, 0.6, shirtMat);
-            playerLimbs.legL = createLimb(-0.18, 0.55, 0.12, 0.6, pantsMat);
-            playerLimbs.legR = createLimb(0.18, 0.55, 0.12, 0.6, pantsMat);
-
-            playerGroup.position.set(0, 1, 15); playerGroup.rotation.y = Math.PI; scene.add(playerGroup);
-        }
-
-        // --- LOW POLY BÄUME ---
-        function createLowPolyTree(x, z) {
-            const group = new THREE.Group();
-            
-            // Stamm (Zylinder)
-            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.7, 2, 6);
-            const trunkMat = new THREE.MeshLambertMaterial({color: 0x5D4037});
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = 1;
-            trunk.castShadow = true; trunk.receiveShadow = true;
-            group.add(trunk);
-
-            // Krone (Dodekaeder für "Low Poly"-Look)
-            const leavesGeo = new THREE.DodecahedronGeometry(2.5);
-            const leavesMat = new THREE.MeshLambertMaterial({color: 0x4CAF50});
-            const leaves = new THREE.Mesh(leavesGeo, leavesMat);
-            leaves.position.y = 3.5;
-            leaves.castShadow = true;
-            group.add(leaves);
-
-            group.position.set(x, 0, z);
-            
-            // Varianz in Größe und Rotation
-            const s = 1 + Math.random() * 0.5;
-            group.scale.set(s,s,s);
-            group.rotation.y = Math.random() * Math.PI;
-
-            scene.add(group);
-            
-            // Kollision
-            const col = new THREE.Box3().setFromObject(trunk);
-            // Manuell anpassen, da Box3 from object manchmal zu groß bei Gruppen
-            const stump = new THREE.Mesh(new THREE.BoxGeometry(1,4,1), new THREE.MeshBasicMaterial({visible:false}));
-            stump.position.set(x,2,z);
-            collisionBoxes.push(new THREE.Box3().setFromObject(stump));
-        }
-
-        // --- FURNITURE GENERATOR ---
-        function getFurnitureMesh(id, color) {
-            const group = new THREE.Group();
-            const mat = new THREE.MeshLambertMaterial({color: color});
-            
-            if (id === 'sofa') {
-                // Basis
-                const base = new THREE.Mesh(new THREE.BoxGeometry(4, 1, 2), mat); base.position.y = 0.5; base.castShadow=true; group.add(base);
-                // Lehne
-                const back = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 0.5), mat); back.position.set(0, 1.25, -0.75); back.castShadow=true; group.add(back);
-                // Armlehnen
-                const armL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1, 2), mat); armL.position.set(-1.75, 1, 0); group.add(armL);
-                const armR = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1, 2), mat); armR.position.set(1.75, 1, 0); group.add(armR);
-                // Kissen (Weiß)
-                const cMat = new THREE.MeshLambertMaterial({color: 0xffffff});
-                const c1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 1.2), cMat); c1.position.set(-0.8, 1.15, 0); group.add(c1);
-                const c2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.3, 1.2), cMat); c2.position.set(0.8, 1.15, 0); group.add(c2);
-            } 
-            else if (id === 'tv') {
-                // Schrank
-                const stand = new THREE.Mesh(new THREE.BoxGeometry(4, 1, 1.5), new THREE.MeshLambertMaterial({color: 0x8D6E63})); 
-                stand.position.y = 0.5; stand.castShadow=true; group.add(stand);
-                // TV
-                const tv = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2, 0.2), new THREE.MeshLambertMaterial({color: 0x111111})); 
-                tv.position.set(0, 2, 0); tv.castShadow=true; group.add(tv);
-                // Screen (leuchtend)
-                const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.3, 1.8), new THREE.MeshBasicMaterial({color: 0x333333}));
-                screen.position.set(0, 2, 0.11); group.add(screen);
-            }
-            else if (id === 'kitchen') {
-                // Block
-                const body = new THREE.Mesh(new THREE.BoxGeometry(4, 2, 2), mat); body.position.y=1; body.castShadow=true; group.add(body);
-                // Herdplatten (Schwarz)
-                const plateGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.05);
-                const plateMat = new THREE.MeshLambertMaterial({color:0x111111});
-                const p1 = new THREE.Mesh(plateGeo, plateMat); p1.position.set(-1, 2.05, 0.5); group.add(p1);
-                const p2 = new THREE.Mesh(plateGeo, plateMat); p2.position.set(0.5, 2.05, 0.5); group.add(p2);
-                // Spüle (Grau)
-                const sink = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 1), new THREE.MeshLambertMaterial({color:0x999999}));
-                sink.position.set(1, 2.05, -0.4); group.add(sink);
-            }
-            else if (id === 'bed') {
-                 const frame = new THREE.Mesh(new THREE.BoxGeometry(3, 1, 4), new THREE.MeshLambertMaterial({color: 0x5D4037})); frame.position.y=0.5; group.add(frame);
-                 const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.4, 3.8), new THREE.MeshLambertMaterial({color: 0xffffff})); mattress.position.y=1.0; group.add(mattress);
-                 const pillow = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 0.8), mat); pillow.position.set(0, 1.35, -1.4); group.add(pillow);
-            }
-            else if (id === 'plant') {
-                // Topf
-                const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.4, 1, 8), new THREE.MeshLambertMaterial({color: 0xB71C1C}));
-                pot.position.y=0.5; pot.castShadow=true; group.add(pot);
-                // Stamm
-                const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2), new THREE.MeshLambertMaterial({color: 0x5D4037}));
-                stem.position.y=1.5; group.add(stem);
-                // Blätter
-                const leafGeo = new THREE.ConeGeometry(0.8, 2, 4);
-                const leafMat = new THREE.MeshLambertMaterial({color: 0x2E7D32});
-                const l1 = new THREE.Mesh(leafGeo, leafMat); l1.position.set(0, 2.5, 0); l1.rotation.x=0.5; group.add(l1);
-                const l2 = new THREE.Mesh(leafGeo, leafMat); l2.position.set(0, 2.2, 0.5); l2.rotation.x=-0.5; group.add(l2);
-            }
-            else {
-                // Fallback (z.B. Teleskop)
-                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
-                mesh.position.y = 0.5;
-                group.add(mesh);
-            }
-            
-            return group;
-        }
-
-        function buildPlayerHouse() {
-            const houseGroup = new THREE.Group();
-            pixelTextures.wall.wrapS = THREE.RepeatWrapping; pixelTextures.wall.wrapT = THREE.RepeatWrapping;
-            const floorMat = new THREE.MeshLambertMaterial({map: pixelTextures.wood}); 
-            const wallMat = new THREE.MeshLambertMaterial({color: 0xFFE0B2, side: THREE.DoubleSide}); // Helle Wandfarbe
-            const stairMat = new THREE.MeshLambertMaterial({map: pixelTextures.wood}); 
-            const balconyMat = new THREE.MeshLambertMaterial({map: pixelTextures.grass});
-
-            const createFloor = (yLevel, isBalcony) => { const geo = new THREE.BoxGeometry(HOUSE_SIZE, 0.5, HOUSE_SIZE); const mesh = new THREE.Mesh(geo, isBalcony ? balconyMat : floorMat); mesh.position.y = yLevel; mesh.receiveShadow = true; houseGroup.add(mesh); collisionObjects.push(mesh); };
-            const createWalls = (yBase) => { 
-                const h = FLOOR_HEIGHT; const t = 1.0; const s = HOUSE_SIZE; 
-                // Wände mit Fensterlöchern (Vereinfacht: Mehrere Boxen)
-                const back = new THREE.Mesh(new THREE.BoxGeometry(s, h, t), wallMat); back.position.set(0, yBase + h/2, -s/2 + t/2); back.castShadow = true; houseGroup.add(back); collisionObjects.push(back); collisionBoxes.push(new THREE.Box3().setFromObject(back));
-                const left = new THREE.Mesh(new THREE.BoxGeometry(t, h, s), wallMat); left.position.set(-s/2 + t/2, yBase + h/2, 0); left.castShadow = true; houseGroup.add(left); collisionObjects.push(left); collisionBoxes.push(new THREE.Box3().setFromObject(left));
-                const right = new THREE.Mesh(new THREE.BoxGeometry(t, h, s), wallMat); right.position.set(s/2 - t/2, yBase + h/2, 0); right.castShadow = true; houseGroup.add(right); collisionObjects.push(right); collisionBoxes.push(new THREE.Box3().setFromObject(right));
-            };
-            const createStair = (x, yStart, z, rotY) => { const len = 20; const height = FLOOR_HEIGHT; const geo = new THREE.BoxGeometry(6, 0.5, len); const mesh = new THREE.Mesh(geo, stairMat); mesh.position.set(x, yStart + height/2, z); mesh.rotation.y = rotY; mesh.rotation.x = -Math.atan(height/len); houseGroup.add(mesh); collisionObjects.push(mesh); };
-            
-            createFloor(0, false); createWalls(0); createStair(10, 0, -5, 0); 
-            createFloor(FLOOR_HEIGHT, false); createWalls(FLOOR_HEIGHT); createStair(-10, FLOOR_HEIGHT, 5, Math.PI); 
-            createFloor(FLOOR_HEIGHT*2, true);
-            const rail = new THREE.Mesh(new THREE.BoxGeometry(HOUSE_SIZE, 1.5, 0.5), stairMat); rail.position.set(0, FLOOR_HEIGHT*2 + 0.75, HOUSE_SIZE/2 - 0.25); houseGroup.add(rail); collisionObjects.push(rail); collisionBoxes.push(new THREE.Box3().setFromObject(rail));
-            
-            // FANCY MÖBEL PLATZIEREN
-            FURNITURE_ITEMS.forEach(item => { 
-                const mesh = getFurnitureMesh(item.id, item.color);
-                const yPos = (item.floor * FLOOR_HEIGHT) + 0.25; // Möbel stehen auf Boden
-                mesh.position.set(item.pos.x, yPos, item.pos.z);
+                gameListContainer.innerHTML = filteredGames.map(createGameCard).join('');
                 
-                // Rotationen für bessere Optik
-                if(item.id==='sofa') mesh.rotation.y = Math.PI;
-                if(item.id==='tv') mesh.rotation.y = Math.PI;
-                if(item.id==='kitchen') mesh.rotation.y = -Math.PI/2;
-                
-                mesh.visible = false; 
-                houseGroup.add(mesh); 
-                furnitureMeshes[item.id] = mesh; 
-                collisionObjects.push(mesh); 
-                collisionBoxes.push(new THREE.Box3().setFromObject(mesh)); 
-            });
-            
-            scene.add(houseGroup);
-        }
-
-        function generateCityGrid() {
-            const mGrass = new THREE.MeshLambertMaterial({map: pixelTextures.grass});
-            const mRoad = new THREE.MeshLambertMaterial({color: 0x546E7A});
-            
-            const offset = (GRID_SIZE * TILE_SIZE) / 2;
-            for (let xi = 0; xi < GRID_SIZE; xi++) {
-                for (let zi = 0; zi < GRID_SIZE; zi++) {
-                    const x = xi * TILE_SIZE - offset; const z = zi * TILE_SIZE - offset;
-                    // Zentrum frei
-                    if (Math.abs(x) < TILE_SIZE * 3 && Math.abs(z) < TILE_SIZE * 3) { createTile(x, z, mGrass); continue; }
-                    
-                    if (xi % 4 === 0 || zi % 4 === 0) { 
-                        createTile(x, z, mRoad); walkablePaths.push({x, z}); 
-                    } else { 
-                        createTile(x, z, mGrass);
-                        if (Math.random() > 0.4) {
-                            createLowPolyHouse(x, z);
-                        } else {
-                            if(Math.random() > 0.5) createLowPolyTree(x, z);
-                        }
-                    }
-                }
-            }
-        }
-
-        function createTile(x, z, mat) { const tile = new THREE.Mesh(new THREE.BoxGeometry(TILE_SIZE, 0.2, TILE_SIZE), mat); tile.position.set(x, 0, z); tile.receiveShadow = true; scene.add(tile); collisionObjects.push(tile); }
-
-        function createLowPolyHouse(x, z) {
-            const h = 6 + Math.random() * 4;
-            const w = 7;
-            const house = new THREE.Group();
-            
-            // Wände (Weiß oder Pastell)
-            const wallColor = new THREE.Color().setHSL(Math.random(), 0.6, 0.8);
-            const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, w), new THREE.MeshLambertMaterial({color: wallColor}));
-            wall.position.y = h/2; wall.castShadow = true; wall.receiveShadow = true;
-            house.add(wall);
-
-            // Dach (Pyramide oder Prisma)
-            const roofColor = new THREE.Color().setHSL(Math.random(), 0.8, 0.4);
-            const roofH = 2.5;
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(w*0.8, roofH, 4), new THREE.MeshLambertMaterial({color: roofColor}));
-            roof.position.y = h + roofH/2; roof.rotation.y = Math.PI / 4;
-            house.add(roof);
-
-            // Tür
-            const door = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 0.2), new THREE.MeshLambertMaterial({color: 0x5D4037}));
-            door.position.set(0, 1.5, w/2 + 0.1);
-            house.add(door);
-
-            house.position.set(x, 0, z);
-            scene.add(house);
-            collisionObjects.push(wall);
-            collisionBoxes.push(new THREE.Box3().setFromObject(wall));
-        }
-
-        function checkHomeProximity() {
-            if (!playerGroup) return;
-            const dist = Math.sqrt(playerGroup.position.x**2 + playerGroup.position.z**2);
-            shopBtnCont.style.display = (dist < HOUSE_SIZE/2 + 5) ? 'flex' : 'none';
-        }
-
-        function openShop() {
-            if (document.pointerLockElement) document.exitPointerLock();
-            isShopOpen = true; shopOverlay.style.display = 'flex';
-            setTimeout(() => shopOverlay.classList.add('open'), 10);
-            renderShopList();
-        }
-
-        function closeShop() {
-            shopOverlay.classList.remove('open');
-            setTimeout(() => { shopOverlay.style.display = 'none'; isShopOpen = false; if(!isTouchDevice) document.body.requestPointerLock(); }, 300);
-        }
-
-        function renderShopList() {
-            shopList.innerHTML = '';
-            FURNITURE_ITEMS.forEach(item => {
-                const isBought = boughtItems.includes(item.id);
-                const affordable = !isBought && coins >= item.cost;
-                const card = document.createElement('div');
-                card.className = `shop-card ${affordable ? 'affordable' : ''} ${isBought ? 'owned' : ''}`;
-                let btnHTML = isBought ? `<div class="card-btn btn-owned">✓</div>` : 
-                    `<button class="card-btn btn-buy" ${affordable ? '' : 'disabled'} onclick="window.buyItem('${item.id}', ${item.cost})">${item.cost} ${SVGS.coin.replace('100', '20').replace('100', '20')}</button>`;
-                card.innerHTML = `<div class="card-icon">${item.icon}</div><div class="card-title">${item.name}</div><div class="card-floor">${item.floor === 0 ? 'EG' : (item.floor === 1 ? '1. OG' : 'Dach')}</div>${btnHTML}`;
-                shopList.appendChild(card);
-            });
-        }
-
-        window.buyItem = (id, cost) => {
-            if (coins >= cost && !boughtItems.includes(id)) {
-                coins -= cost; boughtItems.push(id); coinTextEl.innerText = `${coins}`;
-                if (furnitureMeshes[id]) furnitureMeshes[id].visible = true;
-                playSound('success'); triggerConfetti(); renderShopList();
-            }
-        };
-
-        function triggerConfetti() {
-            const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
-            canvas.width = shopOverlay.clientWidth; canvas.height = shopOverlay.clientHeight;
-            const particles = []; for(let i=0; i<100; i++) particles.push({ x: canvas.width/2, y: canvas.height/2, vx: (Math.random()-0.5)*10, vy: (Math.random()-1)*10, color: `hsl(${Math.random()*360}, 100%, 50%)`, size: Math.random()*8 + 4 });
-            let frame = 0;
-            const loop = () => {
-                ctx.clearRect(0,0,canvas.width,canvas.height); let alive = false;
-                particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; if(p.y < canvas.height) { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); alive = true; } });
-                if(alive && frame < 100) { frame++; requestAnimationFrame(loop); } else ctx.clearRect(0,0,canvas.width,canvas.height);
-            }; loop();
-        }
-
-        function create3DSign(message, type, color) {
-            const group = new THREE.Group();
-            // Rundes Schild
-            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1, 8), new THREE.MeshLambertMaterial({color: 0x5D4037}));
-            pole.position.y = 0.5; group.add(pole);
-            const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d');
-            ctx.font = `bold 120px 'Segoe UI'`; const textWidth = ctx.measureText(message).width;
-            canvas.width = textWidth + 80; canvas.height = 200;
-            // Rounded Rect auf Canvas
-            ctx.fillStyle = color; 
-            ctx.beginPath(); ctx.roundRect(0,0,canvas.width,canvas.height, 40); ctx.fill();
-            ctx.strokeStyle = "white"; ctx.lineWidth = 15; 
-            ctx.beginPath(); ctx.roundRect(0,0,canvas.width,canvas.height, 40); ctx.stroke();
-            ctx.fillStyle = "white"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(message, canvas.width/2, canvas.height/2);
-            const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-            const board = new THREE.Mesh(new THREE.BoxGeometry((canvas.width/canvas.height)*2.0, 1.0, 0.1), [
-                new THREE.MeshLambertMaterial({color: color}), new THREE.MeshLambertMaterial({color: color}),
-                new THREE.MeshLambertMaterial({color: color}), new THREE.MeshLambertMaterial({color: color}),
-                new THREE.MeshBasicMaterial({map: texture, transparent:true}), new THREE.MeshLambertMaterial({color: color})
-            ]);
-            board.position.y = 1.2; board.rotation.x = -Math.PI / 10; group.add(board); group.userData = { word: message, type: type };
-            return group;
-        }
-
-        function spawnWords(count) {
-            for(let i=0; i<count; i++) {
-                const wordData = WORDS[Math.floor(Math.random() * WORDS.length)];
-                const signGroup = create3DSign(wordData.text, wordData.type, wordData.color);
-                let path, x, z;
-                do { path = walkablePaths[Math.floor(Math.random() * walkablePaths.length)]; x = path.x + (Math.random()-0.5)*8; z = path.z + (Math.random()-0.5)*8; } while (Math.abs(x) < HOUSE_SIZE && Math.abs(z) < HOUSE_SIZE);
-                signGroup.position.set(x, 0, z); signGroup.rotation.y = Math.random() * Math.PI * 2;
-                scene.add(signGroup); activeWords.push(signGroup);
-            }
-        }
-
-        function spawnClouds() {
-             for(let i=0; i<30; i++) {
-                const grp = new THREE.Group(); const mat = new THREE.MeshLambertMaterial({color: 0xffffff, opacity:0.8, transparent:true});
-                // Low Poly Cloud (Kugeln)
-                const c1 = new THREE.Mesh(new THREE.DodecahedronGeometry(4), mat); grp.add(c1);
-                const c2 = new THREE.Mesh(new THREE.DodecahedronGeometry(3), mat); c2.position.set(3,0,0); grp.add(c2);
-                const c3 = new THREE.Mesh(new THREE.DodecahedronGeometry(3), mat); c3.position.set(-3,0,0); grp.add(c3);
-                grp.position.set((Math.random()-0.5)*400, 40+Math.random()*20, (Math.random()-0.5)*400); scene.add(grp);
-             }
-        }
-
-        function playSound(type) {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            if (type === 'success') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.1); } 
-            else { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2); }
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-        }
-
-        function setNewTask() {
-            currentTask = TASKS[Math.floor(Math.random() * TASKS.length)];
-            const color = currentTask==='Nomen'?'#e74c3c':currentTask==='Verb'?'#3498db':'#2ecc71';
-            document.getElementById('task-info').innerHTML = `ZIEL: <span style="color:${color}">${currentTask.toUpperCase()}</span>`;
-            taskBar.innerHTML = `SUCHE: <span class="highlight" style="color:${color}">${currentTask}</span>`; taskBar.style.borderColor = color;
-        }
-
-        function checkCollection() {
-            if (!playerGroup) return;
-            for (let i = activeWords.length - 1; i >= 0; i--) {
-                const sign = activeWords[i];
-                if (playerGroup.position.distanceTo(sign.position) < 2.0) {
-                    const wordType = sign.userData.type; const wordText = sign.userData.word;
-                    if (wordType === currentTask) {
-                        coins += 10; playSound('success'); showFeedback(`Richtig!<br>${wordText} ist ein ${wordType}.`, "#4CAF50"); coinTextEl.innerText = `${coins}`; setNewTask();
+                // Visuellen Zustand des aktiven Buttons aktualisieren (Purple Theme)
+                document.querySelectorAll('.category-button').forEach(button => {
+                    if (button.dataset.category === activeCategory) {
+                        button.classList.add('bg-purple-500', 'text-white', 'scale-105', 'shadow-xl');
+                        button.classList.remove('bg-white', 'text-purple-600', 'hover:bg-purple-50', 'shadow-md', 'border-purple-500');
                     } else {
-                        playSound('error'); showFeedback(`Falsch...<br>${wordText} ist ein ${wordType}.`, "#f44336");
+                        button.classList.remove('bg-purple-500', 'text-white', 'scale-105', 'shadow-xl');
+                        button.classList.add('bg-white', 'text-purple-600', 'hover:bg-purple-50', 'shadow-md', 'border-purple-500');
                     }
-                    scene.remove(sign); activeWords.splice(i, 1); spawnWords(1);
-                }
+                });
+            }
+        }
+        
+        /**
+         * Rendert die Kategorie-Buttons und fügt Event-Listener hinzu.
+         */
+        function renderCategoryButtons() {
+            const categoryContainer = document.getElementById('category-filter');
+            if (categoryContainer) {
+                categoryContainer.innerHTML = categories.map(category => `
+                    <button data-category="${category}" 
+                            class="category-button px-5 py-2 text-base font-bold rounded-full border-2 border-purple-500 transition duration-150 ease-in-out">
+                        ${category}
+                    </button>
+                `).join('');
+
+                // Event-Listener hinzufügen
+                document.querySelectorAll('.category-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        setCategory(button.dataset.category);
+                    });
+                });
             }
         }
 
-        function showFeedback(text, color) {
-            feedbackEl.innerHTML = text; feedbackEl.style.borderColor = color; feedbackEl.style.opacity = 1;
-            if (feedbackTimeout) clearTimeout(feedbackTimeout); feedbackTimeout = setTimeout(() => { feedbackEl.style.opacity = 0; }, 2500);
-        }
+        // Rendert die Buttons und Spiele beim Laden der Seite
+        window.onload = () => {
+             renderCategoryButtons(); 
+             renderGames(); // Ruft renderGames auf, um den Standardzustand ("Alle") anzuzeigen
+        };
 
-        function attemptJump() { if (isGrounded) { verticalVelocity = JUMP_FORCE; isGrounded = false; } }
-
-        function onKeyDown(event) {
-            switch (event.code) {
-                case 'ArrowUp': case 'KeyW': moveForward = true; break;
-                case 'ArrowLeft': case 'KeyA': moveLeft = true; break;
-                case 'ArrowDown': case 'KeyS': moveBackward = true; break;
-                case 'ArrowRight': case 'KeyD': moveRight = true; break;
-                case 'Space': attemptJump(); break;
-                case 'KeyE': if(document.getElementById('shop-btn-container').style.display !== 'none') { if(!isShopOpen) openShop(); else closeShop(); } break;
-                case 'Escape': if(isShopOpen) closeShop(); break;
-            }
-        }
-        function onKeyUp(event) {
-            switch (event.code) {
-                case 'ArrowUp': case 'KeyW': moveForward = false; break;
-                case 'ArrowLeft': case 'KeyA': moveLeft = false; break;
-                case 'ArrowDown': case 'KeyS': moveBackward = false; break;
-                case 'ArrowRight': case 'KeyD': moveRight = false; break;
-            }
-        }
-
-        function initJoystick() {
-            joystickZone.style.display = 'block';
-            const stick = document.createElement('div');
-            Object.assign(stick.style, { width: '60px', height: '60px', background: 'rgba(255,255,255,0.5)', borderRadius: '50%', border: '2px solid white', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none' });
-            joystickZone.appendChild(stick);
-            const update = (cx, cy) => { let dx = cx - joystick.originX, dy = cy - joystick.originY; const dist = Math.sqrt(dx*dx + dy*dy); if (dist > 40) { dx *= 40/dist; dy *= 40/dist; } stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`; joystick.dx = dx / 40; joystick.dy = dy / 40; };
-            joystickZone.addEventListener('touchstart', (e) => { joystick.active = true; joystick.originX = e.touches[0].clientX; joystick.originY = e.touches[0].clientY; });
-            joystickZone.addEventListener('touchmove', (e) => { if(joystick.active) update(e.touches[0].clientX, e.touches[0].clientY); });
-            joystickZone.addEventListener('touchend', () => { joystick.active = false; joystick.dx = 0; joystick.dy = 0; stick.style.transform = 'translate(-50%,-50%)'; });
-        }
-
-        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
-
-        function updateMovement(delta) {
-            if (!playerGroup) return;
-            if (moveLeft) playerGroup.rotation.y += 3.0 * delta;
-            if (moveRight) playerGroup.rotation.y -= 3.0 * delta;
-            if (joystick.active) playerGroup.rotation.y -= joystick.dx * 3.0 * delta;
-            playerVelocity.z -= playerVelocity.z * 10.0 * delta;
-            playerVelocity.z += (Number(moveForward) - Number(moveBackward) - (joystick.active ? joystick.dy : 0)) * 200.0 * delta;
-            const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(playerGroup.quaternion);
-            let moveX = forward.x * playerVelocity.z * delta, moveZ = forward.z * playerVelocity.z * delta;
-            const nextX = playerGroup.position.x + moveX, nextZ = playerGroup.position.z + moveZ, currentY = playerGroup.position.y;
-            const pBox = new THREE.Box3();
-            let allowedX = moveX, allowedZ = moveZ;
-            pBox.min.set(nextX-0.3, currentY+0.5, playerGroup.position.z-0.3); pBox.max.set(nextX+0.3, currentY+2, playerGroup.position.z+0.3);
-            for(let box of collisionBoxes) if(pBox.intersectsBox(box)) allowedX = 0;
-            pBox.min.set(playerGroup.position.x-0.3, currentY+0.5, nextZ-0.3); pBox.max.set(playerGroup.position.x+0.3, currentY+2, nextZ+0.3);
-            for(let box of collisionBoxes) if(pBox.intersectsBox(box)) allowedZ = 0;
-            verticalVelocity -= GRAVITY * delta;
-            let nextY = currentY + verticalVelocity * delta;
-            const raycaster = new THREE.Raycaster(new THREE.Vector3(playerGroup.position.x + allowedX, nextY + 1.0, playerGroup.position.z + allowedZ), new THREE.Vector3(0, -1, 0), 0, 10);
-            const intersects = raycaster.intersectObjects(collisionObjects, false);
-            if (intersects.length > 0) {
-                const groundY = intersects[0].point.y;
-                if (verticalVelocity <= 0 && nextY <= groundY) { nextY = groundY; verticalVelocity = 0; isGrounded = true; } else isGrounded = false;
-            } else { isGrounded = false; if (nextY < -50) nextY = 20; }
-            playerGroup.position.set(playerGroup.position.x + allowedX, nextY, playerGroup.position.z + allowedZ);
-            const camTarget = camOffset.clone().applyMatrix4(playerGroup.matrixWorld);
-            camera.position.lerp(camTarget, 0.1);
-            camera.lookAt(playerGroup.position.clone().add(new THREE.Vector3(0, 2, 0)));
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            if (isGameActive && !isShopOpen) { 
-                const delta = Math.min((performance.now() - prevTime) / 1000, 0.1);
-                updateMovement(delta);
-                if (Math.abs(playerVelocity.z) > 0.1 || !isGrounded) {
-                    walkCycle += isGrounded ? delta * 15 : 0;
-                    if(!isGrounded) walkCycle = Math.PI/2;
-                    playerLimbs.legL.rotation.x = Math.sin(walkCycle) * 0.8; playerLimbs.legR.rotation.x = Math.cos(walkCycle) * 0.8;
-                    playerLimbs.armL.rotation.x = Math.cos(walkCycle) * 0.8; playerLimbs.armR.rotation.x = Math.sin(walkCycle) * 0.8;
-                } else {
-                    playerLimbs.legL.rotation.x = 0; playerLimbs.legR.rotation.x = 0;
-                    playerLimbs.armL.rotation.x = 0; playerLimbs.armR.rotation.x = 0;
-                }
-                checkCollection(); checkHomeProximity(); prevTime = performance.now();
-            }
-            renderer.render(scene, camera);
-        }
     </script>
 </body>
 </html>
