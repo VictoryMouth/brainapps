@@ -9,7 +9,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700;900&display=swap');
 
-        /* WICHTIG: touch-action: none auf body verhindert Spiel-Scrollen */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; background-color: #202028; overflow: hidden; font-family: 'Roboto', sans-serif; touch-action: none; }
         
         #game-container { 
@@ -35,14 +34,12 @@
             align-items: flex-start; 
             box-sizing: border-box; 
             z-index: 5; 
-            /* Etwas weniger Padding auf sehr kleinen Screens */
             padding-top: max(10px, env(safe-area-inset-top));
             padding-left: max(10px, env(safe-area-inset-left));
             padding-right: max(10px, env(safe-area-inset-right));
             padding-bottom: max(0px, env(safe-area-inset-bottom));
         }
         
-        /* HUD Font Sizes further reduced for mobile */
         .hud-left { display: flex; flex-direction: column; align-items: flex-start; }
         .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 2px; }
         .hud-subtext { font-family: 'Fredoka One', cursive; font-size: clamp(0.8rem, 3vw, 1.5rem); color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 2px; }
@@ -73,7 +70,7 @@
             border-radius: 30px; 
             border: 3px solid #333; 
             font-family: 'Fredoka One', cursive; 
-            font-size: clamp(1.8rem, 8vw, 3rem); /* Responsiver Text */
+            font-size: clamp(1.8rem, 8vw, 3rem); 
             color: #2c3e50; 
             box-shadow: 0 6px 0 rgba(0,0,0,0.2); 
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -85,7 +82,6 @@
         #tts-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #B71C1C; }
         #tts-btn.loading { animation: pulse 1s infinite alternate; pointer-events: none; opacity: 0.7; }
         
-        /* Updated Screens: Scrolling enabled via touch-action: pan-y */
         #start-screen, #game-over-screen, #leaderboard-screen { 
             position: absolute; 
             top: 0; 
@@ -97,187 +93,99 @@
             flex-direction: column; 
             align-items: center; 
             z-index: 10; 
-            
-            /* SCROLLING ENABLED */
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y !important; 
-            
-            /* DYNAMISCHES PADDING */
             padding-top: max(clamp(10px, 5vh, 60px), env(safe-area-inset-top)); 
             padding-bottom: max(20px, env(safe-area-inset-bottom));
             justify-content: center; 
         }
         
-        @media (max-height: 500px) {
-             #start-screen, #game-over-screen { justify-content: flex-start; padding-top: 10px; }
-        }
-
-        h1 { 
-            font-family: 'Fredoka One', cursive; 
-            color: #FFD700; 
-            font-size: clamp(1.8rem, 7vh, 4rem); 
-            margin-bottom: 2vh; 
-            text-shadow: 3px 3px 0 #333; 
-            text-align: center; 
-            flex-shrink: 0; 
-            padding: 0 10px;
-        }
-        p { 
-            color: white; 
-            font-size: clamp(0.9rem, 2.5vh, 1.2rem); 
-            margin-bottom: 2vh; 
-            text-align: center; 
-            max-width: 600px; 
-            line-height: 1.4; 
-            padding: 0 15px; 
-            flex-shrink: 0; 
-        }
+        h1 { font-family: 'Fredoka One', cursive; color: #FFD700; font-size: clamp(1.8rem, 7vh, 4rem); margin-bottom: 2vh; text-shadow: 3px 3px 0 #333; text-align: center; flex-shrink: 0; padding: 0 10px; }
+        p { color: white; font-size: clamp(0.9rem, 2.5vh, 1.2rem); margin-bottom: 2vh; text-align: center; max-width: 600px; line-height: 1.4; padding: 0 15px; flex-shrink: 0; }
         
         #difficulty-container { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 20px; /* Vorher 1.5vh -> Mehr Abstand */
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 15px; 
             width: 90%; 
-            max-width: 500px; /* Vorher 450px -> Etwas breiter */
+            max-width: 600px; 
             margin-bottom: 3vh; 
             flex-shrink: 0; 
         }
 
-        /* BUTTONS dynamisch */
         .diff-btn { 
             background: #4CAF50; 
             border: none; 
-            padding: 20px 30px; /* Vorher clamp(...) -> Fixer, großer Abstand */
-            font-size: clamp(1.2rem, 3.5vh, 1.8rem); /* Vorher clamp(0.9...) -> Deutlich größer */
+            padding: 15px 10px; 
+            font-size: clamp(1rem, 3vh, 1.6rem); 
             font-family: 'Fredoka One', cursive; 
             color: white; 
-            border-radius: 15px; /* Etwas rundere Ecken */
+            border-radius: 15px; 
             cursor: pointer; 
-            box-shadow: 0 6px 0 #2E7D32; /* Etwas tieferer Schatten */
+            box-shadow: 0 6px 0 #2E7D32; 
             transition: transform 0.1s, box-shadow 0.1s; 
             text-align: center; 
             position: relative; 
             width: 100%; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
         }
-        .diff-btn span { 
-            display: block; 
-            font-size: 0.65em; /* Relativ zur neuen Button-Größe passend */
-            font-family: 'Roboto', sans-serif; 
-            font-weight: normal; 
-            opacity: 0.9; 
-            margin-top: 5px; 
-        }
+        .diff-btn span { display: block; font-size: 0.6em; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 5px; line-height: 1.2; }
         .diff-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #2E7D32; }
-        .diff-1 { background: #8BC34A; box-shadow: 0 4px 0 #689F38; } 
-        .diff-2 { background: #2196F3; box-shadow: 0 4px 0 #1976D2; } 
-        .diff-3 { background: #FF9800; box-shadow: 0 4px 0 #F57C00; } 
-        .diff-4 { background: #E91E63; box-shadow: 0 4px 0 #C2185B; } 
-        .diff-5 { background: #9C27B0; box-shadow: 0 4px 0 #7B1FA2; } 
+        .diff-4 { background: #E91E63; box-shadow: 0 6px 0 #C2185B; } 
+        .diff-1 { background: #8BC34A; box-shadow: 0 6px 0 #689F38; } 
+        .diff-2 { background: #2196F3; box-shadow: 0 6px 0 #1976D2; } 
+        .diff-3 { background: #FF9800; box-shadow: 0 6px 0 #F57C00; } 
         
-        /* Game Over Buttons */
         #game-over-buttons { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; margin-top: 10px; flex-shrink: 0; }
         
         #game-over-btn, #leaderboard-btn, #save-score-btn, #retry-btn { background: #4CAF50; border: none; padding: clamp(10px, 2vh, 15px) 30px; font-size: clamp(1rem, 3.5vh, 2rem); font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; transition: transform 0.1s; margin-top: 5px; flex-shrink: 0; width: 80%; max-width: 400px; }
-        #leaderboard-btn { background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: clamp(0.9rem, 2.8vh, 1.5rem); padding: 8px 20px; width: auto; max-width: 90%; }
         
-        /* Neuer Retry Button Style */
+        #leaderboard-btn { background: #9C27B0; box-shadow: 0 6px 0 #7B1FA2; font-size: clamp(0.9rem, 2.8vh, 1.5rem); padding: 8px 20px; width: auto; max-width: 90%; margin-top: 10px; border: 4px solid transparent; }
+        #leaderboard-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #7B1FA2; }
         #retry-btn { background: #2196F3; box-shadow: 0 6px 0 #1976D2; }
         #retry-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1976D2; }
 
-        /* Keyboard Navigation Focus Style */
-        .keyboard-focus {
-            transform: scale(1.05);
-            border-color: #FFF !important;
-            box-shadow: 0 0 15px #FFD700, 0 0 5px #FFF inset !important;
-            z-index: 20;
-            outline: none; /* remove default browser outline */
-        }
+        .keyboard-focus { transform: scale(1.05); border: 4px solid #FFF !important; box-shadow: 0 0 20px #FFD700 !important; z-index: 20; outline: none; }
         
         #leaderboard-header { display: flex; justify-content: space-between; padding: 10px 15px; color: #aaa; font-size: 0.9rem; font-family: 'Roboto', sans-serif; border-bottom: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 500px; margin-bottom: 5px; box-sizing: border-box; }
-        
-        #leaderboard-list { 
-            list-style: none; padding: 0; width: 90%; max-width: 500px; margin-bottom: 20px; 
-            max-height: 60vh; /* Etwas höher */
-            overflow-y: auto; 
-            touch-action: pan-y !important;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        /* SCROLLBAR SICHTBAR MACHEN */
+        #leaderboard-list { list-style: none; padding: 0; width: 90%; max-width: 500px; margin-bottom: 20px; max-height: 60vh; overflow-y: auto; touch-action: pan-y !important; -webkit-overflow-scrolling: touch; }
         #leaderboard-list::-webkit-scrollbar { width: 8px; }
         #leaderboard-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); border-radius: 4px; }
         #leaderboard-list::-webkit-scrollbar-thumb { background: #FFD700; border-radius: 4px; }
-
         .leaderboard-entry { display: flex; justify-content: space-between; background: rgba(255, 255, 255, 0.1); padding: 8px 12px; margin-bottom: 5px; border-radius: 8px; color: white; font-size: clamp(0.9rem, 2.5vw, 1.1rem); align-items: center; }
         
         .rank-badge { background: #FFD700; color: #333; width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 10px; font-family: 'Fredoka One', cursive; flex-shrink: 0; font-size: 0.9rem; }
         .entry-name { flex-grow: 1; text-align: left; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
-        .entry-level { width: 80px; text-align: left; font-size: 0.8rem; color: #81D4FA; margin-right: 5px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        .entry-level { width: 80px; text-align: left; font-size: 0.8rem; color: #81D4FA; margin-right: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
         .entry-score { width: 50px; text-align: right; color: #FFD700; font-family: 'Fredoka One', cursive; font-size: 1.2rem; flex-shrink: 0; }
         
         #highscore-input-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; width: 100%; }
+        #player-name-input { padding: 10px 15px; font-size: 1.2rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 70%; max-width: 300px; outline: none; pointer-events: auto; }
         
-        /* Updated Input: Ensure it works on mobile */
-        #player-name-input { 
-            padding: 10px 15px; font-size: 1.2rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 70%; max-width: 300px; outline: none; 
-            pointer-events: auto; user-select: text; -webkit-user-select: text;
-        }
-
-        /* NEU: Ladebalken Styles */
-        #save-loading-bar { width: 70%; max-width: 300px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
-        #save-loading-bar.active { display: block; }
-        .bar-fill { height: 100%; background: #4CAF50; width: 0%; animation: loadProgress 1s infinite ease-in-out; }
-        @keyframes loadProgress { 0% { width: 0%; margin-left: 0; } 50% { width: 100%; margin-left: 0; } 100% { width: 0%; margin-left: 100%; } }
-        
-        .controls-selection { margin-top: 2vh; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
-        .controls-label { color: #ccc; font-size: 0.9rem; margin-bottom: 5px; font-family: 'Roboto', sans-serif; }
+        .controls-selection { margin-top: 10px; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
         .toggle-container { display: flex; gap: 10px; justify-content: center; }
-        .mode-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 1rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
-        .mode-btn:hover { background: rgba(255,255,255,0.25); }
+        .mode-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
         .mode-btn.active { background: #FFD700; color: #333; border-color: #FFD700; transform: scale(1.05); box-shadow: 0 4px 10px rgba(255, 215, 0, 0.4); }
 
         #mobile-controls { position: absolute; bottom: 80px; left: 0; width: 100%; height: 120px; pointer-events: none; display: none; z-index: 50; padding-bottom: env(safe-area-inset-bottom); }
         #mobile-controls.active { display: block !important; }
-        /* Touch Buttons angepasst für Mobile */
-        .touch-btn { 
-            position: absolute; 
-            width: clamp(60px, 18vw, 80px); /* Skalierende Buttons */
-            height: clamp(60px, 18vw, 80px); 
-            background: rgba(255, 255, 255, 0.6); border-radius: 50%; border: 4px solid #333; pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: #333; user-select: none; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: background 0.1s, transform 0.1s; 
-            bottom: max(10px, env(safe-area-inset-bottom)); 
-        }
+        .touch-btn { position: absolute; width: clamp(60px, 18vw, 80px); height: clamp(60px, 18vw, 80px); background: rgba(255, 255, 255, 0.6); border-radius: 50%; border: 4px solid #333; pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: #333; user-select: none; box-shadow: 0 4px 0 rgba(0,0,0,0.3); bottom: max(10px, env(safe-area-inset-bottom)); }
         #btn-left { left: max(10px, env(safe-area-inset-left)); } 
         #btn-right { left: calc(max(10px, env(safe-area-inset-left)) + clamp(70px, 22vw, 100px)); } 
         #btn-jump { right: max(10px, env(safe-area-inset-right)); background: #FFD700; border-color: #CCAA00; color: #333; box-shadow: 0 4px 0 #CCAA00; }
         
         .hidden { display: none !important; }
-        #hint-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 100; font-family: 'Roboto', sans-serif; }
-        #hint-box { background: white; padding: 20px; border-radius: 15px; max-width: 85%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        #hint-box h2 { font-family: 'Fredoka One', cursive; color: #1E90FF; margin-top: 0; font-size: 1.5rem; }
-        #hint-box p { font-size: 1rem; color: #333; margin-bottom: 20px; line-height: 1.4; }
-        #hint-close-btn { background: #FF5722; color: white; box-shadow: 0 4px 0 #CD5221; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Fredoka One', cursive; font-size: 1rem; cursor: pointer; }
+        #hint-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 100; }
+        #hint-box { background: white; padding: 20px; border-radius: 15px; max-width: 85%; text-align: center; }
+        #hint-box h2 { font-family: 'Fredoka One', cursive; color: #1E90FF; margin-top: 0; }
+        #hint-close-btn { background: #FF5722; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Fredoka One', cursive; cursor: pointer; }
         
-        #fullscreen-btn { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.8rem; transition: background 0.2s; }
-        #fullscreen-btn:hover { background: rgba(0,0,0,0.6); }
-
-        /* --- SPEZIALMODUS: Landscape / Kleiner Bildschirm --- */
-        @media (max-height: 900px) and (orientation: landscape) {
-            #difficulty-container {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-                margin-bottom: 5px;
-            }
-            .diff-btn:last-child { grid-column: auto; } /* Reset */
-            .diff-btn { padding: 5px 5px; min-height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-            h1 { font-size: 6vh; margin-bottom: 2px; }
-            #leaderboard-btn { padding: 5px 10px; font-size: 0.9rem; margin-top: 5px; }
-            .controls-selection { margin-top: 5px; padding-bottom: 5px; }
-            .mode-btn { padding: 4px 12px; font-size: 0.8rem; }
-            .controls-label { font-size: 0.8rem; margin-bottom: 2px; }
-            #start-screen { padding-top: 5px; justify-content: center; }
-        }
+        #fullscreen-btn { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -295,7 +203,6 @@
             <button id="hint-btn" onclick="getHint()">Tipp ✨</button>
             <button id="restart-hud-btn" onclick="showStartScreen()">Menü</button>
         </div>
-        <!-- Rechte Seite HUD -->
         <div class="hud-text" style="display:flex; flex-direction:column; align-items:flex-end;">
             <div>Leben: <span id="lives">3</span></div>
         </div>
@@ -311,7 +218,7 @@
         </div>
         <div id="question-content">
             <div id="question-box">2 x 2 = ?</div>
-            <button id="tts-btn" onclick="readQuestion()" title="Vorlesen">🔊</button>
+            <button id="tts-btn" onclick="readQuestion()">🔊</button>
         </div>
     </div>
 
@@ -319,24 +226,16 @@
         <button id="fullscreen-btn" onclick="toggleFullscreen()">⛶ Vollbild</button>
         <h1>Einmaleins Hüpfer</h1>
         <div id="difficulty-container">
-            <!-- Neue Level Struktur -->
             <button class="diff-btn diff-4" onclick="startGame(0)">Plus-Planeten ➕<span>Einstellige Addition</span></button>
             <button class="diff-btn diff-1" onclick="startGame(1)">Minus-Meteor ➖<span>Kein Zehnerübergang</span></button>
             <button class="diff-btn diff-2" onclick="startGame(2)">Mal-Galaxie ✖️<span>Das kleine 1x1</span></button>
             <button class="diff-btn diff-3" onclick="startGame(3)">Teil-Nebel ➗<span>Teiler 1-10</span></button>
         </div>
         <button id="leaderboard-btn" onclick="showLeaderboard()">🏆 Online-Ruhmeshalle</button>
-        
-        <!-- NEUE STEUERUNGSAUSWAHL -->
         <div class="controls-selection">
-            <div class="controls-label">Wähle deine Steuerung:</div>
             <div class="toggle-container">
-                <button id="btn-mode-keyboard" class="mode-btn" onclick="setControlMode('keyboard')">
-                    ⌨️ Tastatur
-                </button>
-                <button id="btn-mode-touch" class="mode-btn" onclick="setControlMode('touch')">
-                    📱 Touch
-                </button>
+                <button id="btn-mode-keyboard" class="mode-btn" onclick="setControlMode('keyboard')">⌨️ Tastatur</button>
+                <button id="btn-mode-touch" class="mode-btn" onclick="setControlMode('touch')">📱 Touch</button>
             </div>
         </div>
     </div>
@@ -344,17 +243,14 @@
     <div id="leaderboard-screen" class="hidden">
         <h1>Online-Ruhmeshalle 🏆</h1>
         <p id="leaderboard-loading">Lade Daten...</p>
-        
-        <!-- Header für die Tabelle -->
         <div id="leaderboard-header">
             <div style="width: 30px; text-align: center;">#</div>
             <div style="flex-grow: 1; text-align: left;">Name</div>
             <div style="width: 90px; text-align: left;">Level</div>
             <div style="width: 60px; text-align: right;">Pkt</div>
         </div>
-        
         <ul id="leaderboard-list"></ul>
-        <button onclick="showStartScreen()" style="background: #607D8B; box-shadow: 0 6px 0 #455A64; margin-top:20px; padding: 10px 30px; border:none; border-radius:10px; color:white; font-family:'Fredoka One', cursive; font-size:1.5rem; cursor:pointer;">Zurück</button>
+        <button onclick="showStartScreen()" style="background: #607D8B; box-shadow: 0 6px 0 #455A64; padding: 10px 30px; border:none; border-radius:10px; color:white; font-family:'Fredoka One', cursive; font-size:1.5rem; cursor:pointer;">Zurück</button>
     </div>
 
     <div id="game-over-screen" class="hidden">
@@ -364,8 +260,6 @@
             <p style="color: #FFD700; font-size: 1.4rem;">Gut gemacht! 🌟</p>
             <input type="text" id="player-name-input" placeholder="Dein Name" maxlength="10">
             <button id="save-score-btn" onclick="submitHighscore()">Online Speichern 💾</button>
-            <!-- NEU: Ladebalken Element -->
-            <div id="save-loading-bar"><div class="bar-fill"></div></div>
         </div>
         <p id="motivation-text">Mathe-Coach analysiert... ✨</p>
         <div id="game-over-buttons">
@@ -390,10 +284,8 @@
 </div>
 
 <script>
-    // --- KONFIGURATION ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIP_k1eJJ71Ms_wmFz9f2HN8zHh0QxfnQ5oXYo6F0EUmSwJKY608VdGMQlhYm_nwiK/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzm7HIfOvhoG6GC8-WcOg6q4d77RYk1w5DWz7Zu0ZKM9myNXdFQiNhinSTQqCaRJN21/exec"; 
 
-    // --- GLOBALS ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
@@ -416,33 +308,24 @@
     const leaderboardList = document.getElementById('leaderboard-list');
     const gameOverButtons = document.getElementById('game-over-buttons');
     const leaderboardLoading = document.getElementById('leaderboard-loading');
-    
-    // Control Mode Buttons
     const btnModeKeyboard = document.getElementById('btn-mode-keyboard');
     const btnModeTouch = document.getElementById('btn-mode-touch');
 
-    // Menu Navigation Globals
     let menuNavElements = [];
     let menuNavIndex = -1;
 
-    const API_MODEL = "gemini-2.5-flash-preview-09-2025";
-    const TTS_MODEL = "gemini-2.5-flash-preview-tts";
     const API_KEY = ""; 
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${API_KEY}`;
-    const TTS_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+    const TTS_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${API_KEY}`;
 
-    // --- GAME CONSTANTS ---
     const BASE_GRAVITY = 0.6;
     const BASE_JUMP_FORCE = -11.9; 
     const SUPER_JUMP_FORCE = -17; 
     const SPEED = 11; 
     const GROUND_HEIGHT = 50;
     const LEVEL_HEIGHT_GAP = 130; 
-    
-    // Dynamische Plattformbreite (wird in resize() berechnet)
     let platformWidth = 150;
 
-    // NEUE LEVEL STRUKTUR
     const DIFFICULTIES = [
         { id: 0, label: "Plus ➕", gravity: 0.6, jump: -11.9, type: 'add' },
         { id: 1, label: "Minus ➖", gravity: 0.6, jump: -11.9, type: 'sub' },
@@ -450,8 +333,8 @@
         { id: 3, label: "Geteilt ➗", gravity: 0.6, jump: -11.9, type: 'div' }
     ];
     
-    let currentDifficulty = DIFFICULTIES[2]; // Default Multiplikation
-    let currentDifficultyIndex = 2; // Speichert den Index für den Retry
+    let currentDifficulty = DIFFICULTIES[2];
+    let currentDifficultyIndex = 2;
     let currentGravity = BASE_GRAVITY;
     let currentJumpForce = BASE_JUMP_FORCE;
     let useTouchControls = false; 
@@ -474,28 +357,15 @@
     let player = null; 
     let streak = 0;
     let multiplier = 1;
-    let multiplierTasksLeft = 0;
-    
-    // Globale Variable für Bestenlisten-Cache
     let cachedLeaderboard = [];
-
-    let currentTheme = {
-        name: "Klassisch",
-        skyTop: "#E0F7FA", skyBottom: "#87CEEB", platformNormal: "#8e44ad", platformSafe: "#4CAF50", player: "#FF5722", particle: "#2ecc71"
-    };
+    let currentTheme = { skyTop: "#E0F7FA", skyBottom: "#87CEEB", platformNormal: "#8e44ad", platformSafe: "#4CAF50", player: "#FF5722", particle: "#2ecc71" };
 
     function resize() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
-        
-        canvas.width = winW;
-        canvas.height = winH;
-        
-        // Dynamische Plattformgröße
+        canvas.width = winW; canvas.height = winH;
         platformWidth = Math.min(150, winW / 3.2);
-        
         document.getElementById('game-container').style.height = winH + 'px';
-        
         updateMobileControlsVisibility(); 
     }
     window.addEventListener('resize', resize);
@@ -503,21 +373,14 @@
     function toggleFullscreen() {
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
             const docEl = document.documentElement;
-            if (docEl.requestFullscreen) {
-                docEl.requestFullscreen().catch(e => console.log(e));
-            } else if (docEl.webkitRequestFullscreen) { /* Safari */
-                docEl.webkitRequestFullscreen();
-            }
+            if (docEl.requestFullscreen) docEl.requestFullscreen();
+            else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) { /* Safari */
-                document.webkitExitFullscreen();
-            }
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         }
     }
     
-    // --- CONTROL MODE LOGIC ---
     const setControlMode = (mode) => {
         useTouchControls = (mode === 'touch');
         localStorage.setItem('einmaleins_touch', useTouchControls ? 'true' : 'false');
@@ -525,22 +388,14 @@
     };
 
     const updateControlButtonsUI = () => {
-        if (useTouchControls) {
-            btnModeTouch.classList.add('active');
-            btnModeKeyboard.classList.remove('active');
-        } else {
-            btnModeKeyboard.classList.add('active');
-            btnModeTouch.classList.remove('active');
-        }
+        if (useTouchControls) { btnModeTouch.classList.add('active'); btnModeKeyboard.classList.remove('active'); }
+        else { btnModeKeyboard.classList.add('active'); btnModeTouch.classList.remove('active'); }
     };
 
     const loadTouchControlsState = () => {
         const stored = localStorage.getItem('einmaleins_touch');
-        if (stored !== null) {
-            useTouchControls = stored === 'true';
-        } else {
-            useTouchControls = window.innerWidth <= 1024;
-        }
+        if (stored !== null) useTouchControls = stored === 'true';
+        else useTouchControls = window.innerWidth <= 1024;
         updateControlButtonsUI();
         updateMobileControlsVisibility();
     };
@@ -548,23 +403,14 @@
     const updateMobileControlsVisibility = () => {
         const ctrl = document.getElementById('mobile-controls');
         if (ctrl) {
-            if (useTouchControls && gameRunning) {
-                ctrl.classList.add('active');
-            } else {
-                ctrl.classList.remove('active');
-            }
+            if (useTouchControls && gameRunning) ctrl.classList.add('active');
+            else ctrl.classList.remove('active');
         }
     };
 
-    // --- GOOGLE SHEET LEADERBOARD FUNCTIONS ---
     async function fetchLeaderboard() {
-        if (GOOGLE_SCRIPT_URL === "HIER_DEINE_SCRIPT_URL_EINFUEGEN") {
-            console.warn("Script URL fehlt!");
-            return [];
-        }
+        if (!GOOGLE_SCRIPT_URL) return [];
         try {
-            // VERSUCH: Parameter limit=1000 senden. 
-            // Falls das serverseitige Skript dies unterstützt, erhalten wir mehr Daten.
             const response = await fetch(GOOGLE_SCRIPT_URL + "?action=get&limit=1000");
             const data = await response.json();
             cachedLeaderboard = data;
@@ -573,93 +419,54 @@
                 highscoreEl.innerText = highscore;
             }
             return data;
-        } catch (error) {
-            console.error("Fehler beim Laden der Bestenliste:", error);
-            return [];
-        }
+        } catch (error) { return []; }
     }
 
     async function submitToGoogleSheet(name, score, level) {
-        if (GOOGLE_SCRIPT_URL === "HIER_DEINE_SCRIPT_URL_EINFUEGEN") return;
+        if (!GOOGLE_SCRIPT_URL) return;
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
+            await fetch(GOOGLE_SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({ name: name, score: score, level: level })
             });
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error("Fehler beim Speichern:", error);
-        }
-    }
-
-    function isHighscore(score) {
-        // Logik vereinfacht: Jedes Spiel mit Punkten > 0 darf eingetragen werden
-        return score > 0;
+        } catch (error) {}
     }
 
     async function showLeaderboard() {
-        startScreen.classList.add('hidden');
-        gameOverScreen.classList.add('hidden');
-        leaderboardScreen.classList.remove('hidden');
-        leaderboardList.innerHTML = "";
-        leaderboardLoading.classList.remove('hidden');
-        
+        startScreen.classList.add('hidden'); gameOverScreen.classList.add('hidden'); leaderboardScreen.classList.remove('hidden');
+        leaderboardList.innerHTML = ""; leaderboardLoading.classList.remove('hidden');
         const ctrl = document.getElementById('mobile-controls');
         if(ctrl) ctrl.classList.remove('active');
-        
-        // Navigation initialisieren
         initMenuNavigation('leaderboard');
-        
         const list = await fetchLeaderboard();
-        
         leaderboardLoading.classList.add('hidden');
-        
         if (!list || list.length === 0) {
-            leaderboardList.innerHTML = "<li class='leaderboard-entry' style='justify-content:center;'>Keine Daten oder URL fehlt.</li>";
+            leaderboardList.innerHTML = "<li class='leaderboard-entry' style='justify-content:center;'>Keine Daten verfügbar.</li>";
             return;
         }
-
         list.forEach((entry, index) => {
-            // Keine künstliche Begrenzung, zeige alles was der Server liefert
             const li = document.createElement('li');
             li.className = 'leaderboard-entry';
-            li.innerHTML = `
-                <div class="rank-badge">${index + 1}</div>
-                <div class="entry-name">${entry.name}</div>
-                <div class="entry-level">${entry.level || ""}</div>
-                <div class="entry-score">${entry.score}</div>
-            `;
+            li.innerHTML = `<div class="rank-badge">${index + 1}</div><div class="entry-name">${entry.name}</div><div class="entry-level">${entry.level || ""}</div><div class="entry-score">${entry.score}</div>`;
             leaderboardList.appendChild(li);
         });
     }
 
-    async function submitHighscore() {
+    function submitHighscore() {
         const name = playerNameInput.value.trim().substring(0, 10);
         if (name) {
             localStorage.setItem('einmaleins_player_name', name);
-            
             const btn = document.getElementById('save-score-btn');
-            const loader = document.getElementById('save-loading-bar');
             
-            // UI: Laden starten
-            btn.classList.add('hidden');
-            loader.classList.add('active');
-            playerNameInput.disabled = true;
-
-            await submitToGoogleSheet(name, score, currentDifficulty.label);
-            await fetchLeaderboard();
-            
-            // UI: Laden fertig
-            loader.classList.remove('active');
-            btn.classList.remove('hidden');
             btn.innerText = "Gespeichert! ✅";
             btn.disabled = true;
+            playerNameInput.disabled = true;
+
+            submitToGoogleSheet(name, score, currentDifficulty.label).then(() => {
+                fetchLeaderboard();
+            });
             
-            // Refresh nav list to remove save button and select Retry
             initMenuNavigation('gameover');
-            
-            // HINWEIS: Das Menü bleibt jetzt offen, kein setTimeout mehr!
         } else {
             alert("Bitte gib einen Namen ein!");
         }
@@ -669,40 +476,23 @@
     window.showLeaderboard = showLeaderboard;
     window.showStartScreen = () => { 
         gameRunning = false; 
-        startScreen.classList.remove('hidden'); 
-        gameOverScreen.classList.add('hidden'); 
-        leaderboardScreen.classList.add('hidden'); 
-        questionWrapper.classList.add('hidden'); 
+        startScreen.classList.remove('hidden'); gameOverScreen.classList.add('hidden'); leaderboardScreen.classList.add('hidden'); questionWrapper.classList.add('hidden'); 
         updateMobileControlsVisibility(); 
         initMenuNavigation('start');
     };
-    
-    // Neuer Retry-Handler
-    window.restartLevel = () => {
-        startGame(currentDifficultyIndex);
-    };
-
+    window.restartLevel = () => { startGame(currentDifficultyIndex); };
     window.closeHint = () => { hintOverlay.classList.add('hidden'); gameRunning = true; updateMobileControlsVisibility(); };
     window.setControlMode = setControlMode;
     window.toggleFullscreen = toggleFullscreen;
 
     window.onload = () => {
-        resize();
-        loadTouchControlsState();
-        fetchLeaderboard();
-        initMenuNavigation('start'); // Init navigation on load
-        
-        // Enter-Key Listener für Highscore Input
+        resize(); loadTouchControlsState(); fetchLeaderboard(); initMenuNavigation('start');
         document.getElementById('player-name-input').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                submitHighscore();
-            }
+            if (event.key === 'Enter') submitHighscore();
         });
-
         if (!gameLoopId) gameLoopId = requestAnimationFrame(loop);
     };
 
-    // --- GAME LOGIC ---
     const keys = { left: false, right: false, up: false };
     const getKey = (code) => {
         if (code === 'ArrowLeft' || code === 'KeyA') return 'left';
@@ -710,102 +500,111 @@
         if (code === 'ArrowUp' || code === 'KeyW' || code === 'Space') return 'up';
         return null;
     };
+
     window.addEventListener('keydown', (e) => {
-        // Game Logic
         const k = getKey(e.code);
-        if (k) { 
-            keys[k] = true; 
-            if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); 
-        }
+        if (k) { keys[k] = true; if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); }
         
-        // Menu Navigation Logic
         if (!gameRunning && menuNavElements.length > 0) {
-            // Filter out input editing (if focus is strictly on input)
             if (document.activeElement === playerNameInput) {
-                // Allow Tab or Enter, but let Arrows work for text
                 if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') return;
-                // Allow Down to escape input to buttons?
-                if (e.key === 'ArrowDown') {
+                if (e.key === 'ArrowDown') { e.preventDefault(); playerNameInput.blur(); } else return;
+            }
+
+            let nextIndex = menuNavIndex;
+            const isStartScreen = !startScreen.classList.contains('hidden');
+
+            if (isStartScreen) {
+                // VERBESSERTE NAVIGATION FÜR ALLE BUTTONS
+                if (e.key === 'ArrowDown' || e.key === 's') {
+                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = menuNavIndex + 2; // Schwierigkeit Zeile 1 -> 2
+                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = 4;           // Schwierigkeit Zeile 2 -> Ruhmeshalle
+                    else if (menuNavIndex === 4) nextIndex = 5;                                 // Ruhmeshalle -> Steuerung (Keyboard)
+                    else nextIndex = 0;                                                         // Steuerung -> Anfang (Plus)
                     e.preventDefault();
-                    playerNameInput.blur(); // Unfocus input
-                    // Focus logic handles the rest below
-                } else {
-                    return; // Let native input handling happen (typing)
+                } else if (e.key === 'ArrowUp' || e.key === 'w') {
+                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = 5;                // Anfang -> Steuerung (Keyboard)
+                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = menuNavIndex - 2; // Zeile 2 -> 1
+                    else if (menuNavIndex === 4) nextIndex = 2;                                 // Ruhmeshalle -> Zeile 2
+                    else if (menuNavIndex === 5 || menuNavIndex === 6) nextIndex = 4;           // Steuerung -> Ruhmeshalle
+                    e.preventDefault();
+                } else if (e.key === 'ArrowRight' || e.key === 'd') {
+                    if (menuNavIndex === 4) nextIndex = 4;                                      // Ruhmeshalle bleibt
+                    else if (menuNavIndex === 5) nextIndex = 6;                                 // Steuerung L -> R
+                    else if (menuNavIndex === 6) nextIndex = 5;                                 // Steuerung R -> L (Loop)
+                    else if (menuNavIndex % 2 === 0) nextIndex = menuNavIndex + 1;              // Gitter L -> R
+                    else nextIndex = menuNavIndex - 1;                                          // Gitter R -> L (Loop)
+                    e.preventDefault();
+                } else if (e.key === 'ArrowLeft' || e.key === 'a') {
+                    if (menuNavIndex === 4) nextIndex = 4;
+                    else if (menuNavIndex === 6) nextIndex = 5;                                 // Steuerung R -> L
+                    else if (menuNavIndex === 5) nextIndex = 6;                                 // Steuerung L -> R (Loop)
+                    else if (menuNavIndex % 2 === 1) nextIndex = menuNavIndex - 1;              // Gitter R -> L
+                    else nextIndex = menuNavIndex + 1;                                          // Gitter L -> R (Loop)
+                    e.preventDefault();
+                }
+            } else {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 's' || e.key === 'd') {
+                    nextIndex = (menuNavIndex + 1) % menuNavElements.length;
+                    e.preventDefault();
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'w' || e.key === 'a') {
+                    nextIndex = (menuNavIndex - 1 + menuNavElements.length) % menuNavElements.length;
+                    e.preventDefault();
                 }
             }
 
-            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 's' || e.key === 'd') {
-                e.preventDefault();
-                menuNavIndex = (menuNavIndex + 1) % menuNavElements.length;
-                updateMenuNavVisuals();
-            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'w' || e.key === 'a') {
-                e.preventDefault();
-                menuNavIndex = (menuNavIndex - 1 + menuNavElements.length) % menuNavElements.length;
-                updateMenuNavVisuals();
-            } else if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+            if (e.key === 'Enter' || e.key === ' ') { 
+                e.preventDefault(); 
                 if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) {
-                    // Visual feedback and click
-                    menuNavElements[menuNavIndex].click();
+                    menuNavElements[menuNavIndex].click(); 
                 }
+            } else { 
+                menuNavIndex = nextIndex; 
+                updateMenuNavVisuals(); 
             }
         }
     });
-    
+
     window.addEventListener('keyup', (e) => {
         const k = getKey(e.code);
         if (k) { keys[k] = false; if (k === 'up' && player) player.canJumpRelease = true; }
     });
     
-    // --- KEYBOARD MENU NAVIGATION HELPERS ---
     function initMenuNavigation(screenName) {
         menuNavElements = [];
-        menuNavIndex = -1;
-        
-        if (screenName === 'start') {
+        if (screenName === 'start') { 
+            // Alle interaktiven Elemente sammeln
             const diffs = Array.from(document.querySelectorAll('.diff-btn'));
             const leader = document.getElementById('leaderboard-btn');
-            menuNavElements = [...diffs, leader];
-        } else if (screenName === 'gameover') {
+            const modes = Array.from(document.querySelectorAll('.mode-btn'));
+            menuNavElements = [...diffs, leader, ...modes]; 
+        }
+        else if (screenName === 'gameover') {
             const saveBtn = document.getElementById('save-score-btn');
-            const retryBtn = document.getElementById('retry-btn');
-            const menuBtn = document.getElementById('game-over-btn');
-            
-            // Check if save button is available
-            if (!highscoreInputContainer.classList.contains('hidden') && !saveBtn.classList.contains('hidden') && !saveBtn.disabled) {
-                menuNavElements.push(saveBtn); 
-            }
-            menuNavElements.push(retryBtn, menuBtn);
+            if (!highscoreInputContainer.classList.contains('hidden') && !saveBtn.disabled) menuNavElements.push(saveBtn);
+            menuNavElements.push(document.getElementById('retry-btn'), document.getElementById('game-over-btn'));
         } else if (screenName === 'leaderboard') {
             const backBtn = leaderboardScreen.querySelector('button');
             if (backBtn) menuNavElements.push(backBtn);
         }
-        
-        // Reset visual state
         document.querySelectorAll('.keyboard-focus').forEach(el => el.classList.remove('keyboard-focus'));
-        
-        // Select first element if available
-        if (menuNavElements.length > 0) {
-            menuNavIndex = 0;
-            updateMenuNavVisuals();
+        if (menuNavElements.length > 0) { 
+            menuNavIndex = 0; 
+            updateMenuNavVisuals(); 
         }
     }
 
     function updateMenuNavVisuals() {
         document.querySelectorAll('.keyboard-focus').forEach(el => el.classList.remove('keyboard-focus'));
         if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) {
-            const el = menuNavElements[menuNavIndex];
-            el.classList.add('keyboard-focus');
-            el.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+            menuNavElements[menuNavIndex].classList.add('keyboard-focus');
+            menuNavElements[menuNavIndex].scrollIntoView({behavior: "smooth", block: "center"});
         }
     }
 
     const addTouch = (elem, keyName) => {
         elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
-        elem.addEventListener('touchend', (e) => { 
-            e.preventDefault(); keys[keyName] = false; 
-            if (keyName === 'up' && player) player.canJumpRelease = true;
-        });
+        elem.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; if (keyName === 'up' && player) player.canJumpRelease = true; });
     };
     addTouch(document.getElementById('btn-left'), 'left');
     addTouch(document.getElementById('btn-right'), 'right');
@@ -814,41 +613,18 @@
     class Player {
         constructor() {
             this.w = 40; this.h = 40; this.x = canvas.width/2 - 20; this.y = canvas.height - GROUND_HEIGHT - this.h; 
-            this.vx = 0; this.vy = 0; this.color = currentTheme.player; this.grounded = false;
-            this.facingRight = true; this.readyForSuperJump = false; this.canJumpRelease = true;
+            this.vx = 0; this.vy = 0; this.grounded = false; this.facingRight = true; this.readyForSuperJump = false; this.canJumpRelease = true;
         }
         update(dt) {
-            // Reibung abhängig von DeltaTime
-            // Wenn keine Taste gedrückt ist, bremsen.
-            // 0.8 pro Frame bei 60fps -> 0.8^dt
-            
             if (keys.left) { this.vx = -SPEED; this.facingRight = false; }
             else if (keys.right) { this.vx = SPEED; this.facingRight = true; }
-            else { 
-                // Reibung
-                this.vx *= Math.pow(0.8, dt); 
-            }
-            
+            else this.vx *= Math.pow(0.8, dt); 
             if (this.grounded && !keys.up) this.canJumpRelease = true;
             if (keys.up && this.canJumpRelease) {
-                if (this.readyForSuperJump) { 
-                    this.vy = SUPER_JUMP_FORCE; 
-                    this.grounded = false; 
-                    this.readyForSuperJump = false; 
-                    this.canJumpRelease = false; 
-                }
-                else if (this.grounded) { 
-                    this.vy = currentJumpForce; 
-                    this.grounded = false; 
-                    this.canJumpRelease = false; 
-                }
+                if (this.readyForSuperJump) { this.vy = SUPER_JUMP_FORCE; this.grounded = false; this.readyForSuperJump = false; this.canJumpRelease = false; }
+                else if (this.grounded) { this.vy = currentJumpForce; this.grounded = false; this.canJumpRelease = false; }
             }
-            
-            // Bewegung mit DeltaTime
-            this.x += this.vx * dt;
-            this.y += this.vy * dt; 
-            this.vy += currentGravity * dt; 
-            
+            this.x += this.vx * dt; this.y += this.vy * dt; this.vy += currentGravity * dt; 
             if (this.x < 0) this.x = 0; if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
         }
         draw() {
@@ -856,9 +632,9 @@
             if (multiplier > 1) { ctx.shadowBlur = 20; ctx.shadowColor = multiplier >= 3 ? '#FFD700' : '#00E5FF'; }
             ctx.fillStyle = this.readyForSuperJump ? '#FFD700' : currentTheme.player;
             ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
-            ctx.fillStyle = 'white'; const eyeOffset = this.facingRight ? 8 : -8;
-            ctx.fillRect(eyeOffset - 2, -10, 8, 8); ctx.fillRect(eyeOffset - 12, -10, 8, 8);
-            ctx.fillStyle = 'black'; ctx.fillRect(eyeOffset, -8, 4, 4); ctx.fillRect(eyeOffset - 10, -8, 4, 4);
+            ctx.fillStyle = 'white'; const o = this.facingRight ? 8 : -8;
+            ctx.fillRect(o - 2, -10, 8, 8); ctx.fillRect(o - 12, -10, 8, 8);
+            ctx.fillStyle = 'black'; ctx.fillRect(o, -8, 4, 4); ctx.fillRect(o - 10, -8, 4, 4);
             ctx.restore();
         }
     }
@@ -866,35 +642,20 @@
     class Platform {
         constructor(x, y, value, isCorrect, isPermanent = false) { 
             this.x = x; this.y = y; this.w = platformWidth; this.h = 30; this.value = value;
-            this.isCorrect = isCorrect; this.isPermanent = isPermanent; this.breaking = false;
-            this.broken = false; this.isSolved = false; this.breakTimer = 0; this.shakeOffset = 0;
+            this.isCorrect = isCorrect; this.isPermanent = isPermanent; this.breaking = false; this.broken = false; this.isSolved = false; this.breakTimer = 0; this.shakeOffset = 0;
         }
         update(player, dt) {
             if (this.broken && !this.isPermanent) return; 
+            if (gameOverPending && !this.isPermanent) return;
+
             if (this.breaking) {
-                this.breakTimer += dt; // Timer mit dt skalieren
-                this.shakeOffset = (Math.random() - 0.5) * 10; 
+                this.breakTimer += dt; this.shakeOffset = (Math.random() - 0.5) * 10; 
                 if (this.breakTimer > 30) { this.broken = true; if (!this.isPermanent) createParticles(this.x + this.w/2, this.y + this.h/2 + cameraY, '#e74c3c'); }
                 return; 
             }
-            if (gameOverPending && !this.isPermanent) return;
-            
-            const py = this.y + cameraY; 
-            const pb = player.y + player.h; 
-            
-            // Rekonstruiere vorherige Y-Position (ungefähr), um Tunneling zu verhindern
-            const prevY = player.y - (player.vy * dt);
-            const prevPb = prevY + player.h;
-
-            // Kollisionserkennung mit "Was Above"-Check (Tunneling Fix)
-            // Prüfen ob wir vorher drüber waren (prevPb <= py) und jetzt drunter/drauf sind (pb >= py)
-            // Kleine Toleranz (+10) hilft, falls wir genau auf der Kante landen
+            const py = this.y + cameraY; const pb = player.y + player.h; const prevPb = (player.y - (player.vy * dt)) + player.h;
             if (player.vy > 0 && prevPb <= py + 10 && pb >= py && player.x + player.w > this.x && player.x < this.x + this.w) {
-                // Korrektur: Setze Spieler genau auf die Plattform
-                player.y = py - player.h; 
-                player.vy = 0; 
-                player.grounded = true; 
-                this.triggerEffect(player);
+                player.y = py - player.h; player.vy = 0; player.grounded = true; this.triggerEffect(player);
             }
         }
         triggerEffect(player) {
@@ -907,10 +668,9 @@
         }
         handleCorrectAnswer(player) {
             let pts = 10 * multiplier; const time = Date.now() - questionStartTime;
-            if (time <= 5000) { pts += 5; createFloatingText(player.x, player.y - 40, "Speed Bonus!", "#FFD700"); }
+            if (time <= 5000) pts += 5;
             score += pts; scoreEl.innerText = score; streak++; streakEl.innerText = streak;
-            if (streak === 5) { activateMultiplier(2); createFloatingText(player.x, player.y - 60, "x2!", "#00E5FF"); }
-            else if (streak === 10) { activateMultiplier(3); createFloatingText(player.x, player.y - 60, "x3!", "#FFD700"); }
+            if (streak === 5) activateMultiplier(2); else if (streak === 10) activateMultiplier(3);
             createParticles(this.x + this.w/2, this.y + cameraY, currentTheme.particle); 
             player.vy = 0; player.readyForSuperJump = true; this.isSolved = true; generateLevel();
         }
@@ -936,126 +696,58 @@
             const e = { 'leaf':['🍂','🍃'], 'cloud':['☁️','🌥️'], 'bird':['🐦','🦅'], 'balloon':['🎈','🪁'], 'space':['🚀','🛰️'], 'star':['⭐','✨'] };
             return e[t][Math.floor(Math.random()*e[t].length)];
         }
-        update(dt) { 
-            this.x += this.vx * dt; 
-            this.y += this.vy * dt; 
-            this.wobble += 0.05 * dt; 
-            if (this.x > canvas.width + 50) this.x = -50; 
-            if (this.x < -50) this.x = canvas.width + 50; 
-        }
+        update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; this.wobble += 0.05 * dt; if (this.x > canvas.width + 50) this.x = -50; if (this.x < -50) this.x = canvas.width + 50; }
         draw() { ctx.font = `${this.size}px Arial`; ctx.save(); ctx.translate(this.x, this.y); ctx.fillText(this.emoji, 0, 0); ctx.restore(); }
     }
 
     class Particle { constructor(x, y, c) { this.x=x; this.y=y; this.vx=(Math.random()-0.5)*10; this.vy=(Math.random()-0.5)*10; this.life=1.0; this.c=c; } update(dt){this.x+=this.vx * dt;this.y+=this.vy * dt;this.life-=0.05 * dt;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,5,0,6.28);ctx.fill();ctx.globalAlpha=1.0;} }
-    class FloatingText { constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.life=1.0;this.vy=-2;} update(dt){this.y+=this.vy * dt;this.life-=0.02 * dt;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.font='bold 24px Fredoka One';ctx.fillText(this.t,this.x,this.y);ctx.globalAlpha=1.0;} }
-
+    
     function activateMultiplier(v) { multiplier = v; updateMultiplierUI(); }
     function updateMultiplierUI() { if (multiplier > 1) { multiplierEl.innerText = `x${multiplier}`; multiplierEl.classList.remove('hidden'); } else multiplierEl.classList.add('hidden'); }
     function createParticles(x,y,c) { for(let i=0;i<15;i++) particles.push(new Particle(x,y,c)); }
-    function createFloatingText(x,y,t,c) { floatingTexts.push(new FloatingText(x,y,t,c)); }
     
     function manageBackground(py) {
-        const h = cameraY + (canvas.height - py); 
         if (Math.random() < 0.008) { 
+            const h = cameraY + (canvas.height - py);
             let t = h < 3000 ? 'cloud' : (h < 6000 ? 'bird' : 'space');
             backgroundObjects.push(new BackgroundObject(-cameraY - 50, t, cameraY));
         }
-        backgroundObjects = backgroundObjects.filter(o => { const sy = o.y + cameraY; return sy > -200 && sy < canvas.height + 200; });
-    }
-
-    // --- FALLBACK MOTIVATION ---
-    function getFallbackMotivation(score) {
-        const motivations = [
-            "Toll gemacht! Weiter so! 🚀",
-            "Super Leistung! Du wirst immer besser. 🌟",
-            "Mathe-Champion im Anflug! 🦅",
-            "Das war spitze! Gleich nochmal? 🔥",
-            "Übung macht den Meister! 📚",
-            "Klasse gerechnet! Bleib dran. 💪",
-            "Nicht aufgeben, du schaffst das! 🌈"
-        ];
-        return motivations[Math.floor(Math.random() * motivations.length)];
+        backgroundObjects = backgroundObjects.filter(o => (o.y + cameraY) > -200 && (o.y + cameraY) < canvas.height + 200);
     }
 
     async function callGeminiLLM(q) {
-        if (!API_KEY) return null; // Fallback sofort nutzen, wenn kein Key da ist
-        const payload = { contents: [{ parts: [{ text: q }] }], systemInstruction: { parts: [{ text: "Mathelehrer. Extrem kurz. Rechentrick + Plusaufgabe. Keine Begrüßung. Max 25 Worte." }] } };
+        if (!API_KEY) return null;
         try { 
-            const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); 
-            const j = await r.json(); 
-            return j.candidates[0].content.parts[0].text; 
-        } catch (e) { 
-            return null; // Return null on error to trigger fallback
-        }
+            const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: q }] }], systemInstruction: { parts: [{ text: "Mathelehrer. Extrem kurz. Rechentrick. Max 25 Worte." }] } }) }); 
+            const j = await r.json(); return j.candidates[0].content.parts[0].text; 
+        } catch (e) { return null; }
     }
 
     window.getHint = async () => {
         if (!gameRunning || !currentProblem) return;
         gameRunning = false; hintOverlay.classList.remove('hidden'); hintContent.innerText = "Lade Tipp...";
         const hint = await callGeminiLLM(`Trick für ${currentProblem.text.replace(' = ?','')}`);
-        
-        // Fallback für den Tipp, falls LLM nicht geht
-        if (hint) {
-            hintContent.innerText = hint;
-        } else {
-             hintContent.innerText = "Tipp-Coach gerade in der Kaffeepause. Versuch es selbst! 😉";
-        }
+        hintContent.innerText = hint || "Konzentriere dich! Du schaffst das.";
     };
     
-    // --- UPDATED MATH LOGIC ---
     const generateMathProblem = () => {
         const type = currentDifficulty.type;
-        
         if (type === 'mult') {
-            // Unchanged: Klassisches Einmaleins
-            let a = Math.floor(Math.random() * 10) + 1;
-            let b = Math.floor(Math.random() * 10) + 1;
+            let a = Math.floor(Math.random() * 10) + 1, b = Math.floor(Math.random() * 10) + 1;
             const ans = a * b;
             return { text: `${a} x ${b} = ?`, correct: ans, answers: [ans, ans+5, ans-5].sort(()=>Math.random()-0.5) };
-        } 
-        else if (type === 'div') {
-            // Division: Teiler 1-10
-            let d = Math.floor(Math.random() * 10) + 1; // Divisor 1-10
-            let r = Math.floor(Math.random() * 10) + 1; // Resultat 1-10 (damit Dividend <= 100)
+        } else if (type === 'div') {
+            let d = Math.floor(Math.random() * 10) + 1, r = Math.floor(Math.random() * 10) + 1;
             return { text: `${d*r} : ${d} = ?`, correct: r, answers: [r, r+2, r-2].sort(()=>Math.random()-0.5) };
-        } 
-        else if (type === 'add') {
-            // Plus: nur einstellige Zahlen addieren (1-9 + 1-9)
-            let a = Math.floor(Math.random() * 9) + 1;
-            let b = Math.floor(Math.random() * 9) + 1;
+        } else if (type === 'add') {
+            let a = Math.floor(Math.random() * 9) + 1, b = Math.floor(Math.random() * 9) + 1;
             const ans = a + b;
-            
-            // Distraktoren
-            let dist1 = ans + 2;
-            let dist2 = ans - 1; 
-            if (dist2 < 0) dist2 = ans + 1;
-            
-            return { text: `${a} + ${b} = ?`, correct: ans, answers: [ans, dist1, dist2].sort(()=>Math.random()-0.5) };
-        } 
-        else if (type === 'sub') {
-            // Minus: bis 100, nur einstellig abziehen, kein Zehnerübergang
-            // 1. Wähle a (Minuend)
-            let a = Math.floor(Math.random() * 100) + 1; // 1-100
-            
-            // Korrigiere a, falls Einerstelle 0 ist (z.B. 50), da wir mind. 1 abziehen wollen
-            // und keinen Zehnerübergang erlauben (50-1 = 49 -> Übergang).
-            if (a % 10 === 0) a--; 
-            
-            // Max b ist die Einerstelle von a, damit wir nicht drunter kommen
-            let maxB = a % 10;
-            // Falls a < 10, ist maxB = a. Falls a=5, maxB=5. 5-5=0 erlaubt.
-            // Falls wir 0 ausschließen wollen:
-            if (maxB === 0) maxB = 1; // Should technically not be hit due to a-- fix above
-            
-            let b = Math.floor(Math.random() * maxB) + 1; // 1 bis maxB
-            
+            return { text: `${a} + ${b} = ?`, correct: ans, answers: [ans, ans+2, ans-1].sort(()=>Math.random()-0.5) };
+        } else {
+            let a = Math.floor(Math.random() * 100) + 1; if (a % 10 === 0) a--;
+            let b = Math.floor(Math.random() * (a % 10)) + 1;
             const ans = a - b;
-            
-            let dist1 = ans + 1;
-            let dist2 = ans - 2;
-            if(dist2 < 0) dist2 = ans + 2;
-
-            return { text: `${a} - ${b} = ?`, correct: ans, answers: [ans, dist1, dist2].sort(()=>Math.random()-0.5) };
+            return { text: `${a} - ${b} = ?`, correct: ans, answers: [ans, ans+1, ans-2].sort(()=>Math.random()-0.5) };
         }
     };
 
@@ -1065,15 +757,24 @@
         currentProblem = generateMathProblem();
         questionEl.innerText = currentProblem.text;
         questionWrapper.classList.remove('hidden');
-        const y = nextPlatformY;
         currentProblem.answers.forEach((ans, i) => {
             const xPos = (canvas.width/4)*(i+1) - platformWidth/2;
-            allPlatforms.push(new Platform(xPos, y, ans, ans === currentProblem.correct)); 
+            allPlatforms.push(new Platform(xPos, nextPlatformY, ans, ans === currentProblem.correct)); 
         });
         nextPlatformY -= LEVEL_HEIGHT_GAP; 
     };
 
-    const deductLife = () => { if (gameOverPending || isInvulnerable) return; lives--; livesEl.innerText = lives; isInvulnerable = true; if (lives <= 0) gameOverPending = true; };
+    const deductLife = () => { 
+        if (gameOverPending || isInvulnerable) return; 
+        lives--; 
+        livesEl.innerText = lives; 
+        isInvulnerable = true; 
+        if (lives <= 0) {
+            gameOverPending = true;
+            allPlatforms.forEach(p => { if(!p.isPermanent) p.breaking = true; });
+        }
+    };
+
     const loseLifeFallback = () => {
         deductLife();
         if (!gameOverPending) {
@@ -1083,130 +784,58 @@
     };
 
     window.startGame = (idx) => {
-        currentDifficulty = DIFFICULTIES[idx];
-        currentDifficultyIndex = idx; // Speichern für Retry
-        currentGravity = currentDifficulty.gravity;
-        currentJumpForce = currentDifficulty.jump;
-        
-        score = 0; lives = 3; streak = 0; multiplier = 1; cameraY = 0;
-        allPlatforms = []; backgroundObjects = []; floatingTexts = []; gameOverPending = false; isInvulnerable = false;
+        currentDifficulty = DIFFICULTIES[idx]; currentDifficultyIndex = idx; currentGravity = currentDifficulty.gravity; currentJumpForce = currentDifficulty.jump;
+        score = 0; lives = 3; streak = 0; multiplier = 1; cameraY = 0; allPlatforms = []; backgroundObjects = []; gameOverPending = false; isInvulnerable = false;
         streakEl.innerText = 0; scoreEl.innerText = 0; livesEl.innerText = 3; updateMultiplierUI();
         const gy = canvas.height - GROUND_HEIGHT;
         allPlatforms.push(new Platform(0, gy, 0, false, true)); allPlatforms[0].w = canvas.width;
         player = new Player(); nextPlatformY = gy - LEVEL_HEIGHT_GAP;
-        gameRunning = true; 
-        
-        // FIX: Alle möglichen Bildschirme ausblenden
-        startScreen.classList.add('hidden'); 
-        gameOverScreen.classList.add('hidden'); 
-        leaderboardScreen.classList.add('hidden');
-        
-        // Reset nav array to prevent accidental clicks
-        menuNavElements = [];
-        
-        generateLevel();
-        updateMobileControlsVisibility();
-        
+        gameRunning = true; startScreen.classList.add('hidden'); gameOverScreen.classList.add('hidden'); leaderboardScreen.classList.add('hidden');
+        menuNavElements = []; generateLevel(); updateMobileControlsVisibility();
         if (!gameLoopId) loop();
     };
 
     async function gameOver() {
+        if (!gameOverScreen.classList.contains('hidden')) return;
         gameRunning = false; finalScoreEl.innerText = score;
-        
-        // Reset für neues Spiel (Eingabefeld & Button zurücksetzen)
         const storedName = localStorage.getItem('einmaleins_player_name');
-        playerNameInput.value = storedName || "";
-        playerNameInput.disabled = false;
-        
+        playerNameInput.value = storedName || ""; playerNameInput.disabled = false;
         const saveBtn = document.getElementById('save-score-btn');
-        const loader = document.getElementById('save-loading-bar');
-        
-        if(saveBtn) {
-            saveBtn.innerText = "Online Speichern 💾";
-            saveBtn.disabled = false;
-            saveBtn.classList.remove('hidden');
-        }
-        if(loader) {
-            loader.classList.remove('active');
-        }
-
-        // Immer anzeigen, wenn Punkte > 0
-        if (score > 0) {
-            highscoreInputContainer.classList.remove('hidden'); 
-        } else {
-            highscoreInputContainer.classList.add('hidden'); 
-        }
-        
-        // Menü Buttons immer anzeigen, damit man auch ohne Speichern zurück kann
-        gameOverButtons.classList.remove('hidden'); 
-
-        questionWrapper.classList.add('hidden'); 
-        gameOverScreen.classList.remove('hidden');
-        motivationTextEl.innerText = "Coach lädt...";
-        updateMobileControlsVisibility();
-        
-        // Init navigation for game over screen
-        initMenuNavigation('gameover');
-        
+        if(saveBtn) { saveBtn.innerText = "Online Speichern 💾"; saveBtn.disabled = false; saveBtn.classList.remove('hidden'); }
+        if (score > 0) { highscoreInputContainer.classList.remove('hidden'); setTimeout(() => playerNameInput.focus(), 50); }
+        else highscoreInputContainer.classList.add('hidden'); 
+        questionWrapper.classList.add('hidden'); gameOverScreen.classList.remove('hidden');
+        updateMobileControlsVisibility(); initMenuNavigation('gameover');
         let msg = await callGeminiLLM(`Motiviere Spieler für ${score} Punkte.`);
-        if (!msg) {
-             msg = getFallbackMotivation(score);
-        }
-        motivationTextEl.innerText = msg;
+        motivationTextEl.innerText = msg || "Gut gemacht! Nächstes Mal knackst du den Rekord.";
     }
 
-    // --- GAME LOOP & DELTA TIME ---
     let lastTime = 0;
-
     function loop(timestamp) {
         gameLoopId = requestAnimationFrame(loop);
-        
         if (!timestamp) timestamp = performance.now();
         if (!lastTime) lastTime = timestamp;
-
-        const deltaTime = timestamp - lastTime;
-        lastTime = timestamp;
-
-        // Berechne Delta-Time-Faktor
-        // Ziel: 60 FPS (16.66ms) -> dt = 1.0
-        // Bei 30 FPS -> dt = 2.0
-        // Cap bei max 4x (entspricht 15 FPS), um riesige Sprünge (Glitches) zu vermeiden
-        let dt = deltaTime / (1000 / 60);
-        if (dt > 4) dt = 4;
-
-        // --- RENDER & UPDATE LOGIC ---
+        const deltaTime = timestamp - lastTime; lastTime = timestamp;
+        let dt = deltaTime / (1000 / 60); if (dt > 4) dt = 4;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        if(gameRunning) {
-            const time = Date.now() - questionStartTime;
-            document.querySelectorAll('.timer-dot').forEach((d, i) => i < 5 - Math.floor(time/1000) ? d.classList.remove('inactive') : d.classList.add('inactive'));
-            
-            // Time limit logik
-            if (currentDifficulty.timeLimit && currentDifficulty.timeLimit > 0 && time > currentDifficulty.timeLimit && player && player.grounded) {
-                allPlatforms.forEach(p => { if (Math.abs((player.y+player.h)-p.y) < 10 && player.x+player.w > p.x && player.x < p.x+p.w && !p.breaking) p.breaking = true; });
-            }
-        }
-        
         if (gameRunning && player) {
-            manageBackground(player.y); 
-            player.update(dt); // DT übergeben
-
+            manageBackground(player.y); player.update(dt);
             const climb = canvas.height * 0.4, fall = canvas.height * 0.6;
             if (player.y < climb) { cameraY += climb - player.y; player.y = climb; }
             else if (player.y > fall && cameraY > 0) { let d = Math.min(cameraY, player.y - fall); cameraY -= d; player.y -= d; }
             
-            if (player.y > canvas.height && cameraY <= 0) loseLifeFallback();
-            
-            allPlatforms.forEach(p => p.update(player, dt)); // DT übergeben
+            if (player.y > canvas.height) {
+                if (gameOverPending) gameOver();
+                else if (cameraY <= 0) loseLifeFallback();
+            }
+            allPlatforms.forEach(p => p.update(player, dt));
             particles.forEach((p, i) => { p.update(dt); if(p.life <= 0) particles.splice(i, 1); });
-            floatingTexts.forEach((f, i) => { f.update(dt); if(f.life <= 0) floatingTexts.splice(i, 1); });
             backgroundObjects.forEach(b => b.update(dt));
         }
-        
         ctx.save(); ctx.translate(0, cameraY); 
         backgroundObjects.forEach(b => b.draw()); allPlatforms.forEach(p => p.draw());
         ctx.restore(); if(player) player.draw(); particles.forEach(p => p.draw());
-        ctx.save(); ctx.translate(0, cameraY); floatingTexts.forEach(f => f.draw()); ctx.restore();
     }
     
     async function readQuestion() {
@@ -1217,13 +846,12 @@
             const r = await fetch(TTS_API_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: `Frage: ${t}` }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } } }) });
             const j = await r.json();
             const audioData = new Int16Array(base64ToArrayBuffer(j.candidates[0].content.parts[0].inlineData.data));
-            const blob = pcmToWav(audioData);
-            new Audio(URL.createObjectURL(blob)).play();
+            new Audio(URL.createObjectURL(pcmToWav(audioData))).play();
         } catch(e) {}
         isTTSLoading = false; ttsBtn.classList.remove('loading');
     }
 
-    function base64ToArrayBuffer(b64) { const s = atob(b64); const len = s.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) bytes[i] = s.charCodeAt(i); return bytes.buffer; }
+    function base64ToArrayBuffer(b64) { const s = atob(b64), bytes = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) bytes[i] = s.charCodeAt(i); return bytes.buffer; }
     function pcmToWav(pcm) {
         const buffer = new ArrayBuffer(44 + pcm.length * 2), view = new DataView(buffer);
         const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
