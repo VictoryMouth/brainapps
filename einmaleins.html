@@ -697,16 +697,38 @@
             this.vx = 0; this.vy = 0; this.color = currentTheme.player; this.grounded = false;
             this.facingRight = true; this.readyForSuperJump = false; this.canJumpRelease = true;
         }
-        update() {
+        update(dt) {
+            // Reibung abhängig von DeltaTime
+            // Wenn keine Taste gedrückt ist, bremsen.
+            // 0.8 pro Frame bei 60fps -> 0.8^dt
+            
             if (keys.left) { this.vx = -SPEED; this.facingRight = false; }
             else if (keys.right) { this.vx = SPEED; this.facingRight = true; }
-            else { this.vx *= 0.8; }
+            else { 
+                // Reibung
+                this.vx *= Math.pow(0.8, dt); 
+            }
+            
             if (this.grounded && !keys.up) this.canJumpRelease = true;
             if (keys.up && this.canJumpRelease) {
-                if (this.readyForSuperJump) { this.vy = SUPER_JUMP_FORCE; this.grounded = false; this.readyForSuperJump = false; this.canJumpRelease = false; }
-                else if (this.grounded) { this.vy = currentJumpForce; this.grounded = false; this.canJumpRelease = false; }
+                if (this.readyForSuperJump) { 
+                    this.vy = SUPER_JUMP_FORCE; 
+                    this.grounded = false; 
+                    this.readyForSuperJump = false; 
+                    this.canJumpRelease = false; 
+                }
+                else if (this.grounded) { 
+                    this.vy = currentJumpForce; 
+                    this.grounded = false; 
+                    this.canJumpRelease = false; 
+                }
             }
-            this.x += this.vx; this.y += this.vy; this.vy += currentGravity; 
+            
+            // Bewegung mit DeltaTime
+            this.x += this.vx * dt;
+            this.y += this.vy * dt; 
+            this.vy += currentGravity * dt; 
+            
             if (this.x < 0) this.x = 0; if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
         }
         draw() {
@@ -727,17 +749,32 @@
             this.isCorrect = isCorrect; this.isPermanent = isPermanent; this.breaking = false;
             this.broken = false; this.isSolved = false; this.breakTimer = 0; this.shakeOffset = 0;
         }
-        update(player) {
+        update(player, dt) {
             if (this.broken && !this.isPermanent) return; 
             if (this.breaking) {
-                this.breakTimer++; this.shakeOffset = (Math.random() - 0.5) * 10; 
+                this.breakTimer += dt; // Timer mit dt skalieren
+                this.shakeOffset = (Math.random() - 0.5) * 10; 
                 if (this.breakTimer > 30) { this.broken = true; if (!this.isPermanent) createParticles(this.x + this.w/2, this.y + this.h/2 + cameraY, '#e74c3c'); }
                 return; 
             }
             if (gameOverPending && !this.isPermanent) return;
-            const py = this.y + cameraY; const pb = player.y + player.h; const prevPb = (player.y - player.vy) + player.h;
-            if (player.vy > 0 && pb >= py && prevPb <= py + 10 && player.x + player.w > this.x && player.x < this.x + this.w) {
-                player.y = py - player.h; player.vy = 0; player.grounded = true; this.triggerEffect(player);
+            
+            const py = this.y + cameraY; 
+            const pb = player.y + player.h; 
+            
+            // Rekonstruiere vorherige Y-Position (ungefähr), um Tunneling zu verhindern
+            const prevY = player.y - (player.vy * dt);
+            const prevPb = prevY + player.h;
+
+            // Kollisionserkennung mit "Was Above"-Check (Tunneling Fix)
+            // Prüfen ob wir vorher drüber waren (prevPb <= py) und jetzt drunter/drauf sind (pb >= py)
+            // Kleine Toleranz (+10) hilft, falls wir genau auf der Kante landen
+            if (player.vy > 0 && prevPb <= py + 10 && pb >= py && player.x + player.w > this.x && player.x < this.x + this.w) {
+                // Korrektur: Setze Spieler genau auf die Plattform
+                player.y = py - player.h; 
+                player.vy = 0; 
+                player.grounded = true; 
+                this.triggerEffect(player);
             }
         }
         triggerEffect(player) {
@@ -779,12 +816,18 @@
             const e = { 'leaf':['🍂','🍃'], 'cloud':['☁️','🌥️'], 'bird':['🐦','🦅'], 'balloon':['🎈','🪁'], 'space':['🚀','🛰️'], 'star':['⭐','✨'] };
             return e[t][Math.floor(Math.random()*e[t].length)];
         }
-        update() { this.x += this.vx; this.y += this.vy; this.wobble += 0.05; if (this.x > canvas.width + 50) this.x = -50; if (this.x < -50) this.x = canvas.width + 50; }
+        update(dt) { 
+            this.x += this.vx * dt; 
+            this.y += this.vy * dt; 
+            this.wobble += 0.05 * dt; 
+            if (this.x > canvas.width + 50) this.x = -50; 
+            if (this.x < -50) this.x = canvas.width + 50; 
+        }
         draw() { ctx.font = `${this.size}px Arial`; ctx.save(); ctx.translate(this.x, this.y); ctx.fillText(this.emoji, 0, 0); ctx.restore(); }
     }
 
-    class Particle { constructor(x, y, c) { this.x=x; this.y=y; this.vx=(Math.random()-0.5)*10; this.vy=(Math.random()-0.5)*10; this.life=1.0; this.c=c; } update(){this.x+=this.vx;this.y+=this.vy;this.life-=0.05;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,5,0,6.28);ctx.fill();ctx.globalAlpha=1.0;} }
-    class FloatingText { constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.life=1.0;this.vy=-2;} update(){this.y+=this.vy;this.life-=0.02;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.font='bold 24px Fredoka One';ctx.fillText(this.t,this.x,this.y);ctx.globalAlpha=1.0;} }
+    class Particle { constructor(x, y, c) { this.x=x; this.y=y; this.vx=(Math.random()-0.5)*10; this.vy=(Math.random()-0.5)*10; this.life=1.0; this.c=c; } update(dt){this.x+=this.vx * dt;this.y+=this.vy * dt;this.life-=0.05 * dt;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,5,0,6.28);ctx.fill();ctx.globalAlpha=1.0;} }
+    class FloatingText { constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.life=1.0;this.vy=-2;} update(dt){this.y+=this.vy * dt;this.life-=0.02 * dt;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.font='bold 24px Fredoka One';ctx.fillText(this.t,this.x,this.y);ctx.globalAlpha=1.0;} }
 
     function activateMultiplier(v) { multiplier = v; updateMultiplierUI(); }
     function updateMultiplierUI() { if (multiplier > 1) { multiplierEl.innerText = `x${multiplier}`; multiplierEl.classList.remove('hidden'); } else multiplierEl.classList.add('hidden'); }
@@ -974,51 +1017,58 @@
         motivationTextEl.innerText = msg;
     }
 
-    // --- GAME LOOP & FRAMERATE CAP ---
-    let lastFrameTime = 0;
-    const TARGET_FPS = 60;
-    const FRAME_INTERVAL = 1000 / TARGET_FPS;
+    // --- GAME LOOP & DELTA TIME ---
+    let lastTime = 0;
 
     function loop(timestamp) {
         gameLoopId = requestAnimationFrame(loop);
         
-        // Fallback falls timestamp nicht da ist (erster manueller Aufruf)
         if (!timestamp) timestamp = performance.now();
+        if (!lastTime) lastTime = timestamp;
+
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
+
+        // Berechne Delta-Time-Faktor
+        // Ziel: 60 FPS (16.66ms) -> dt = 1.0
+        // Bei 30 FPS -> dt = 2.0
+        // Cap bei max 4x (entspricht 15 FPS), um riesige Sprünge (Glitches) zu vermeiden
+        let dt = deltaTime / (1000 / 60);
+        if (dt > 4) dt = 4;
+
+        // --- RENDER & UPDATE LOGIC ---
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const deltaTime = timestamp - lastFrameTime;
-        
-        if (deltaTime >= FRAME_INTERVAL) {
-            // Zeitstempel korrigieren um Drift zu vermeiden
-            lastFrameTime = timestamp - (deltaTime % FRAME_INTERVAL);
+        if(gameRunning) {
+            const time = Date.now() - questionStartTime;
+            document.querySelectorAll('.timer-dot').forEach((d, i) => i < 5 - Math.floor(time/1000) ? d.classList.remove('inactive') : d.classList.add('inactive'));
             
-            // --- RENDER & UPDATE LOGIC ---
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if(gameRunning) {
-                const time = Date.now() - questionStartTime;
-                document.querySelectorAll('.timer-dot').forEach((d, i) => i < 5 - Math.floor(time/1000) ? d.classList.remove('inactive') : d.classList.add('inactive'));
-                
-                // Time limit logik
-                if (currentDifficulty.timeLimit && currentDifficulty.timeLimit > 0 && time > currentDifficulty.timeLimit && player && player.grounded) {
-                    allPlatforms.forEach(p => { if (Math.abs((player.y+player.h)-p.y) < 10 && player.x+player.w > p.x && player.x < p.x+p.w && !p.breaking) p.breaking = true; });
-                }
+            // Time limit logik
+            if (currentDifficulty.timeLimit && currentDifficulty.timeLimit > 0 && time > currentDifficulty.timeLimit && player && player.grounded) {
+                allPlatforms.forEach(p => { if (Math.abs((player.y+player.h)-p.y) < 10 && player.x+player.w > p.x && player.x < p.x+p.w && !p.breaking) p.breaking = true; });
             }
-            if (gameRunning && player) {
-                manageBackground(player.y); player.update();
-                const climb = canvas.height * 0.4, fall = canvas.height * 0.6;
-                if (player.y < climb) { cameraY += climb - player.y; player.y = climb; }
-                else if (player.y > fall && cameraY > 0) { let d = Math.min(cameraY, player.y - fall); cameraY -= d; player.y -= d; }
-                if (player.y > canvas.height && cameraY <= 0) loseLifeFallback();
-                allPlatforms.forEach(p => p.update(player));
-                particles.forEach((p, i) => { p.update(); if(p.life <= 0) particles.splice(i, 1); });
-                floatingTexts.forEach((f, i) => { f.update(); if(f.life <= 0) floatingTexts.splice(i, 1); });
-                backgroundObjects.forEach(b => b.update());
-            }
-            ctx.save(); ctx.translate(0, cameraY); 
-            backgroundObjects.forEach(b => b.draw()); allPlatforms.forEach(p => p.draw());
-            ctx.restore(); if(player) player.draw(); particles.forEach(p => p.draw());
-            ctx.save(); ctx.translate(0, cameraY); floatingTexts.forEach(f => f.draw()); ctx.restore();
-            // --- END UPDATE LOGIC ---
         }
+        
+        if (gameRunning && player) {
+            manageBackground(player.y); 
+            player.update(dt); // DT übergeben
+
+            const climb = canvas.height * 0.4, fall = canvas.height * 0.6;
+            if (player.y < climb) { cameraY += climb - player.y; player.y = climb; }
+            else if (player.y > fall && cameraY > 0) { let d = Math.min(cameraY, player.y - fall); cameraY -= d; player.y -= d; }
+            
+            if (player.y > canvas.height && cameraY <= 0) loseLifeFallback();
+            
+            allPlatforms.forEach(p => p.update(player, dt)); // DT übergeben
+            particles.forEach((p, i) => { p.update(dt); if(p.life <= 0) particles.splice(i, 1); });
+            floatingTexts.forEach((f, i) => { f.update(dt); if(f.life <= 0) floatingTexts.splice(i, 1); });
+            backgroundObjects.forEach(b => b.update(dt));
+        }
+        
+        ctx.save(); ctx.translate(0, cameraY); 
+        backgroundObjects.forEach(b => b.draw()); allPlatforms.forEach(p => p.draw());
+        ctx.restore(); if(player) player.draw(); particles.forEach(p => p.draw());
+        ctx.save(); ctx.translate(0, cameraY); floatingTexts.forEach(f => f.draw()); ctx.restore();
     }
     
     async function readQuestion() {
