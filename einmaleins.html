@@ -35,34 +35,55 @@
             align-items: flex-start; 
             box-sizing: border-box; 
             z-index: 5; 
-            padding-top: max(20px, env(safe-area-inset-top));
-            padding-left: max(20px, env(safe-area-inset-left));
-            padding-right: max(20px, env(safe-area-inset-right));
+            /* Etwas weniger Padding auf sehr kleinen Screens */
+            padding-top: max(10px, env(safe-area-inset-top));
+            padding-left: max(10px, env(safe-area-inset-left));
+            padding-right: max(10px, env(safe-area-inset-right));
             padding-bottom: max(0px, env(safe-area-inset-bottom));
         }
         
+        /* HUD Font Sizes further reduced for mobile */
         .hud-left { display: flex; flex-direction: column; align-items: flex-start; }
-        .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1.2rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 5px; }
-        .hud-subtext { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 3vw, 1.5rem); color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 5px; }
-        .hud-record { font-family: 'Fredoka One', cursive; font-size: clamp(0.8rem, 2.5vw, 1.2rem); color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; }
-        .multiplier-anim { animation: pulseText 0.5s infinite alternate; color: #D32F2F; margin-left: 10px; font-size: 1.5rem; display: inline-block; }
+        .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 2px; }
+        .hud-subtext { font-family: 'Fredoka One', cursive; font-size: clamp(0.8rem, 3vw, 1.5rem); color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 2px; }
+        .hud-record { font-family: 'Fredoka One', cursive; font-size: clamp(0.7rem, 2.5vw, 1.2rem); color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; }
+        
+        .multiplier-anim { animation: pulseText 0.5s infinite alternate; color: #D32F2F; margin-left: 5px; font-size: clamp(1rem, 4vw, 1.5rem); display: inline-block; }
         @keyframes pulseText { from { transform: scale(1); } to { transform: scale(1.2); } }
-        .hud-center { pointer-events: auto; display: flex; gap: 10px; }
-        #restart-hud-btn, #hint-btn { font-family: 'Fredoka One', cursive; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; font-size: clamp(0.8rem, 3vw, 1.2rem); padding: 5px 15px; color: white; }
+        
+        .hud-center { pointer-events: auto; display: flex; gap: 5px; }
+        #restart-hud-btn, #hint-btn { 
+            font-family: 'Fredoka One', cursive; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; 
+            font-size: clamp(0.7rem, 3vw, 1.2rem); padding: 5px 10px; color: white; 
+        }
         #restart-hud-btn { background: #FF9800; box-shadow: 0 4px 0 #F57C00; }
         #restart-hud-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #F57C00; }
         #hint-btn { background: #1E90FF; box-shadow: 0 4px 0 #104E8B; }
         #hint-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #104E8B; }
-        #question-wrapper { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 6; }
-        #bonus-timer { display: flex; gap: 8px; margin-bottom: 10px; }
-        .timer-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: opacity 0.3s, transform 0.3s; }
+        
+        #question-wrapper { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; z-index: 6; width: 90%; }
+        #bonus-timer { display: flex; gap: 5px; margin-bottom: 5px; }
+        .timer-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: opacity 0.3s, transform 0.3s; }
         .timer-dot.inactive { opacity: 0.2; transform: scale(0.7); filter: grayscale(100%); }
-        #question-content { display: flex; align-items: center; }
-        #question-box { background: rgba(255, 255, 255, 0.9); padding: 15px 40px; border-radius: 50px; border: 4px solid #333; font-family: 'Fredoka One', cursive; font-size: 3rem; color: #2c3e50; box-shadow: 0 8px 0 rgba(0,0,0,0.2); animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; margin-right: 15px; }
-        #tts-btn { pointer-events: auto; background: #E53935; color: white; border-radius: 50%; width: 60px; height: 60px; font-size: 1.5rem; box-shadow: 0 4px 0 #B71C1C; transition: transform 0.1s, box-shadow 0.1s, opacity 0.3s; }
+        
+        #question-content { display: flex; align-items: center; justify-content: center; }
+        #question-box { 
+            background: rgba(255, 255, 255, 0.95); 
+            padding: 10px 25px; 
+            border-radius: 30px; 
+            border: 3px solid #333; 
+            font-family: 'Fredoka One', cursive; 
+            font-size: clamp(1.8rem, 8vw, 3rem); /* Responsiver Text */
+            color: #2c3e50; 
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2); 
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            pointer-events: none; 
+            margin-right: 10px; 
+            white-space: nowrap;
+        }
+        #tts-btn { pointer-events: auto; background: #E53935; color: white; border-radius: 50%; width: clamp(40px, 10vw, 60px); height: clamp(40px, 10vw, 60px); font-size: 1.2rem; box-shadow: 0 4px 0 #B71C1C; transition: transform 0.1s, box-shadow 0.1s, opacity 0.3s; flex-shrink: 0; }
         #tts-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #B71C1C; }
         #tts-btn.loading { animation: pulse 1s infinite alternate; pointer-events: none; opacity: 0.7; }
-        @keyframes pulse { from { transform: scale(1.0); } to { transform: scale(1.1); } }
         
         /* Updated Screens: Scrolling enabled via touch-action: pan-y */
         #start-screen, #game-over-screen, #leaderboard-screen { 
@@ -82,26 +103,25 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y !important; 
             
-            /* DYNAMISCHES PADDING: Weniger Padding auf kleinen Screens */
+            /* DYNAMISCHES PADDING */
             padding-top: max(clamp(10px, 5vh, 60px), env(safe-area-inset-top)); 
             padding-bottom: max(20px, env(safe-area-inset-bottom));
-            justify-content: center; /* Standard Center */
+            justify-content: center; 
         }
         
-        /* Wenn Screen sehr klein/querformat, oben anfangen damit man scrollen kann, falls nötig */
         @media (max-height: 500px) {
              #start-screen, #game-over-screen { justify-content: flex-start; padding-top: 10px; }
         }
 
-        /* Dynamische Schriftgröße basierend auf Viewport Height (vh) */
         h1 { 
             font-family: 'Fredoka One', cursive; 
             color: #FFD700; 
-            font-size: clamp(2rem, 8vh, 4rem); /* Passt sich der Höhe an */
+            font-size: clamp(1.8rem, 7vh, 4rem); 
             margin-bottom: 2vh; 
-            text-shadow: 4px 4px 0 #333; 
+            text-shadow: 3px 3px 0 #333; 
             text-align: center; 
             flex-shrink: 0; 
+            padding: 0 10px;
         }
         p { 
             color: white; 
@@ -110,7 +130,7 @@
             text-align: center; 
             max-width: 600px; 
             line-height: 1.4; 
-            padding: 0 10px; 
+            padding: 0 15px; 
             flex-shrink: 0; 
         }
         
@@ -118,7 +138,7 @@
             display: flex; 
             flex-direction: column; 
             gap: 1.5vh; 
-            width: 90%; 
+            width: 85%; 
             max-width: 450px; 
             margin-bottom: 2vh; 
             flex-shrink: 0; 
@@ -128,8 +148,8 @@
         .diff-btn { 
             background: #4CAF50; 
             border: none; 
-            padding: clamp(8px, 2vh, 15px) 20px; 
-            font-size: clamp(1rem, 3vh, 1.3rem); 
+            padding: clamp(8px, 1.8vh, 15px) 20px; 
+            font-size: clamp(0.9rem, 2.5vh, 1.3rem); 
             font-family: 'Fredoka One', cursive; 
             color: white; 
             border-radius: 10px; 
@@ -140,7 +160,7 @@
             position: relative; 
             width: 100%; 
         }
-        .diff-btn span { display: block; font-size: 0.7em; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+        .diff-btn span { display: block; font-size: 0.8em; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 2px; }
         .diff-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #2E7D32; }
         .diff-1 { background: #8BC34A; box-shadow: 0 4px 0 #689F38; } 
         .diff-2 { background: #2196F3; box-shadow: 0 4px 0 #1976D2; } 
@@ -148,64 +168,67 @@
         .diff-4 { background: #E91E63; box-shadow: 0 4px 0 #C2185B; } 
         .diff-5 { background: #9C27B0; box-shadow: 0 4px 0 #7B1FA2; } 
         
-        #game-over-btn, #leaderboard-btn, #save-score-btn { background: #4CAF50; border: none; padding: clamp(10px, 2vh, 15px) 40px; font-size: clamp(1.2rem, 4vh, 2rem); font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; transition: transform 0.1s; margin-top: 10px; flex-shrink: 0; }
-        #leaderboard-btn { background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: clamp(1rem, 3vh, 1.5rem); padding: 10px 30px; }
+        #game-over-btn, #leaderboard-btn, #save-score-btn { background: #4CAF50; border: none; padding: clamp(10px, 2vh, 15px) 30px; font-size: clamp(1rem, 3.5vh, 2rem); font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; transition: transform 0.1s; margin-top: 10px; flex-shrink: 0; }
+        #leaderboard-btn { background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: clamp(0.9rem, 2.8vh, 1.5rem); padding: 8px 20px; }
         
         #leaderboard-header { display: flex; justify-content: space-between; padding: 10px 15px; color: #aaa; font-size: 0.9rem; font-family: 'Roboto', sans-serif; border-bottom: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 500px; margin-bottom: 5px; box-sizing: border-box; }
         
-        /* Leaderboard scrolling fix */
         #leaderboard-list { 
             list-style: none; padding: 0; width: 90%; max-width: 500px; margin-bottom: 20px; 
             max-height: 50vh; overflow-y: auto; 
-            touch-action: pan-y !important; /* WICHTIG für Scrollen in der Liste */
+            touch-action: pan-y !important;
             -webkit-overflow-scrolling: touch;
         }
-        .leaderboard-entry { display: flex; justify-content: space-between; background: rgba(255, 255, 255, 0.1); padding: 10px 15px; margin-bottom: 5px; border-radius: 8px; color: white; font-size: 1.1rem; align-items: center; }
+        .leaderboard-entry { display: flex; justify-content: space-between; background: rgba(255, 255, 255, 0.1); padding: 8px 12px; margin-bottom: 5px; border-radius: 8px; color: white; font-size: clamp(0.9rem, 2.5vw, 1.1rem); align-items: center; }
         
-        .rank-badge { background: #FFD700; color: #333; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 10px; font-family: 'Fredoka One', cursive; flex-shrink: 0; }
+        .rank-badge { background: #FFD700; color: #333; width: 25px; height: 25px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; margin-right: 10px; font-family: 'Fredoka One', cursive; flex-shrink: 0; font-size: 0.9rem; }
         .entry-name { flex-grow: 1; text-align: left; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
-        .entry-level { width: 90px; text-align: left; font-size: 0.85rem; color: #81D4FA; margin-right: 5px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
-        .entry-score { width: 60px; text-align: right; color: #FFD700; font-family: 'Fredoka One', cursive; font-size: 1.4rem; flex-shrink: 0; }
+        .entry-level { width: 80px; text-align: left; font-size: 0.8rem; color: #81D4FA; margin-right: 5px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+        .entry-score { width: 50px; text-align: right; color: #FFD700; font-family: 'Fredoka One', cursive; font-size: 1.2rem; flex-shrink: 0; }
         
         #highscore-input-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; width: 100%; }
-        #player-name-input { padding: 10px 15px; font-size: 1.5rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 80%; max-width: 300px; outline: none; }
+        #player-name-input { padding: 10px 15px; font-size: 1.2rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 70%; max-width: 300px; outline: none; }
         
         .controls-selection { margin-top: 2vh; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
-        .controls-label { color: #ccc; font-size: 1rem; margin-bottom: 5px; font-family: 'Roboto', sans-serif; }
-        .toggle-container { display: flex; gap: 15px; justify-content: center; }
-        .mode-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .controls-label { color: #ccc; font-size: 0.9rem; margin-bottom: 5px; font-family: 'Roboto', sans-serif; }
+        .toggle-container { display: flex; gap: 10px; justify-content: center; }
+        .mode-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 1rem; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
         .mode-btn:hover { background: rgba(255,255,255,0.25); }
         .mode-btn.active { background: #FFD700; color: #333; border-color: #FFD700; transform: scale(1.05); box-shadow: 0 4px 10px rgba(255, 215, 0, 0.4); }
 
         #mobile-controls { position: absolute; bottom: 80px; left: 0; width: 100%; height: 120px; pointer-events: none; display: none; z-index: 50; padding-bottom: env(safe-area-inset-bottom); }
         #mobile-controls.active { display: block !important; }
-        .touch-btn { position: absolute; width: 80px; height: 80px; background: rgba(255, 255, 255, 0.6); border-radius: 50%; border: 4px solid #333; pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: #333; user-select: none; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: background 0.1s, transform 0.1s; bottom: max(20px, env(safe-area-inset-bottom)); }
-        #btn-left { left: max(20px, env(safe-area-inset-left)); } 
-        #btn-right { left: calc(max(20px, env(safe-area-inset-left)) + 100px); } 
-        #btn-jump { right: max(20px, env(safe-area-inset-right)); background: #FFD700; border-color: #CCAA00; color: #333; box-shadow: 0 4px 0 #CCAA00; }
+        /* Touch Buttons angepasst für Mobile */
+        .touch-btn { 
+            position: absolute; 
+            width: clamp(60px, 18vw, 80px); /* Skalierende Buttons */
+            height: clamp(60px, 18vw, 80px); 
+            background: rgba(255, 255, 255, 0.6); border-radius: 50%; border: 4px solid #333; pointer-events: auto; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; color: #333; user-select: none; box-shadow: 0 4px 0 rgba(0,0,0,0.3); transition: background 0.1s, transform 0.1s; 
+            bottom: max(10px, env(safe-area-inset-bottom)); 
+        }
+        #btn-left { left: max(10px, env(safe-area-inset-left)); } 
+        #btn-right { left: calc(max(10px, env(safe-area-inset-left)) + clamp(70px, 22vw, 100px)); } 
+        #btn-jump { right: max(10px, env(safe-area-inset-right)); background: #FFD700; border-color: #CCAA00; color: #333; box-shadow: 0 4px 0 #CCAA00; }
         
         .hidden { display: none !important; }
         #hint-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 100; font-family: 'Roboto', sans-serif; }
-        #hint-box { background: white; padding: 30px; border-radius: 15px; max-width: 80%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-        #hint-box h2 { font-family: 'Fredoka One', cursive; color: #1E90FF; margin-top: 0; }
-        #hint-box p { font-size: 1.2rem; color: #333; margin-bottom: 20px; line-height: 1.4; }
-        #hint-close-btn { background: #FF5722; color: white; box-shadow: 0 4px 0 #CD5221; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Fredoka One', cursive; font-size: 1.2rem; cursor: pointer; }
+        #hint-box { background: white; padding: 20px; border-radius: 15px; max-width: 85%; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        #hint-box h2 { font-family: 'Fredoka One', cursive; color: #1E90FF; margin-top: 0; font-size: 1.5rem; }
+        #hint-box p { font-size: 1rem; color: #333; margin-bottom: 20px; line-height: 1.4; }
+        #hint-close-btn { background: #FF5722; color: white; box-shadow: 0 4px 0 #CD5221; border: none; padding: 10px 20px; border-radius: 8px; font-family: 'Fredoka One', cursive; font-size: 1rem; cursor: pointer; }
         
-        #fullscreen-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.9rem; transition: background 0.2s; }
+        #fullscreen-btn { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.8rem; transition: background 0.2s; }
         #fullscreen-btn:hover { background: rgba(0,0,0,0.6); }
 
         /* --- SPEZIALMODUS: Landscape / Kleiner Bildschirm --- */
-        /* WICHTIG: Erhöht auf 900px, damit auch iPads im Querformat (ca. 768px-834px Höhe) das Raster-Layout nutzen */
         @media (max-height: 900px) and (orientation: landscape) {
             #difficulty-container {
                 display: grid;
-                grid-template-columns: 1fr 1fr; /* Zwei Spalten */
+                grid-template-columns: 1fr 1fr;
                 gap: 8px;
                 margin-bottom: 5px;
             }
-            .diff-btn:last-child {
-                grid-column: span 2; /* Der letzte Button nimmt ganze Breite */
-            }
+            .diff-btn:last-child { grid-column: span 2; }
             .diff-btn { padding: 5px 5px; min-height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
             h1 { font-size: 6vh; margin-bottom: 2px; }
             #leaderboard-btn { padding: 5px 10px; font-size: 0.9rem; margin-top: 5px; }
@@ -365,9 +388,11 @@
     const BASE_JUMP_FORCE = -11.9; 
     const SUPER_JUMP_FORCE = -17; 
     const SPEED = 11; 
-    const PLATFORM_WIDTH = 150; 
     const GROUND_HEIGHT = 50;
     const LEVEL_HEIGHT_GAP = 130; 
+    
+    // Dynamische Plattformbreite (wird in resize() berechnet)
+    let platformWidth = 150;
 
     // Difficulty settings now include a LABEL for the leaderboard
     const DIFFICULTIES = [
@@ -418,6 +443,10 @@
         
         canvas.width = winW;
         canvas.height = winH;
+        
+        // Dynamische Plattformgröße: Maximal 150, aber schmaler auf kleinen Screens
+        // Teilt Bildschirmbreite durch ~3.2, damit 3 Plattformen gut nebeneinander passen
+        platformWidth = Math.min(150, winW / 3.2);
         
         // Container zwingen, die exakte Fensterhöhe anzunehmen
         document.getElementById('game-container').style.height = winH + 'px';
@@ -678,7 +707,7 @@
 
     class Platform {
         constructor(x, y, value, isCorrect, isPermanent = false) { 
-            this.x = x; this.y = y; this.w = PLATFORM_WIDTH; this.h = 30; this.value = value;
+            this.x = x; this.y = y; this.w = platformWidth; this.h = 30; this.value = value;
             this.isCorrect = isCorrect; this.isPermanent = isPermanent; this.breaking = false;
             this.broken = false; this.isSolved = false; this.breakTimer = 0; this.shakeOffset = 0;
         }
@@ -816,7 +845,11 @@
         questionWrapper.classList.remove('hidden');
         const y = nextPlatformY;
         currentProblem.answers.forEach((ans, i) => {
-            allPlatforms.push(new Platform((canvas.width/4)*(i+1) - 75, y, ans, ans === currentProblem.correct)); 
+            // Zentrale Berechnung für Plattform-X-Positionen basierend auf dynamischer Breite
+            // (canvas.width / 4) * (i+1) zentriert sie grob in den Vierteln, 
+            // - platformWidth/2 zentriert das Rechteck exakt um diesen Punkt.
+            const xPos = (canvas.width/4)*(i+1) - platformWidth/2;
+            allPlatforms.push(new Platform(xPos, y, ans, ans === currentProblem.correct)); 
         });
         nextPlatformY -= LEVEL_HEIGHT_GAP; 
     };
