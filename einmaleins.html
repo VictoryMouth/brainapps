@@ -14,14 +14,15 @@
         #game-container { 
             position: relative; 
             width: 100%; 
+            height: 100vh;
             display: flex; 
             justify-content: center; 
             align-items: center; 
             background: linear-gradient(to top, #E0F7FA, #87CEEB); 
-            transition: background 2s ease; 
+            z-index: 1;
         }
         
-        canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.3); outline: none; }
+        canvas { display: block; box-shadow: 0 0 20px rgba(0,0,0,0.3); outline: none; z-index: 2; background: transparent; }
         
         #ui-layer { 
             position: absolute; 
@@ -41,10 +42,17 @@
         }
         
         .hud-left { display: flex; flex-direction: column; align-items: flex-start; }
-        .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 2px; }
+        .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 2px; transition: color 0.5s; }
         .hud-subtext { font-family: 'Fredoka One', cursive; font-size: clamp(0.8rem, 3vw, 1.5rem); color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 2px; }
-        .hud-record { font-family: 'Fredoka One', cursive; font-size: clamp(0.7rem, 2.5vw, 1.2rem); color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; }
+        .hud-record { font-family: 'Fredoka One', cursive; font-size: clamp(0.7rem, 2.5vw, 1.1rem); color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; margin-bottom: 1px; }
+        .hud-local { font-family: 'Fredoka One', cursive; font-size: clamp(0.7rem, 2.5vw, 1.1rem); color: #4CAF50; text-shadow: 1px 1px 0px #fff; z-index: 10; }
         
+        /* Modus für Nacht-HUD-Kontrast */
+        .night-hud .hud-text { color: #fff; text-shadow: 2px 2px 0px #333; }
+        .night-hud .hud-subtext { text-shadow: 1px 1px 0px #333; }
+        .night-hud .hud-record { text-shadow: 1px 1px 0px #333; }
+        .night-hud .hud-local { text-shadow: 1px 1px 0px #333; }
+
         .multiplier-anim { animation: pulseText 0.5s infinite alternate; color: #D32F2F; margin-left: 5px; font-size: clamp(1rem, 4vw, 1.5rem); display: inline-block; }
         @keyframes pulseText { from { transform: scale(1); } to { transform: scale(1.2); } }
         
@@ -188,7 +196,7 @@
         #fullscreen-btn { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.8rem; }
     </style>
 </head>
-<body>
+<body class="day-hud">
 
 <div id="game-container">
     <canvas id="gameCanvas"></canvas>
@@ -197,6 +205,7 @@
         <div class="hud-left">
             <div class="hud-text">Punkte: <span id="score">0</span> <span id="multiplier-display" class="multiplier-anim hidden">x2</span></div>
             <div class="hud-subtext">Streak: <span id="streak">0</span> 🔥</div>
+            <div class="hud-local">Dein Rekord: <span id="local-record">0</span></div>
             <div class="hud-record">Online-Rekord: <span id="highscore">0</span></div>
         </div>
         <div class="hud-center">
@@ -290,6 +299,7 @@
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
     const highscoreEl = document.getElementById('highscore'); 
+    const localRecordEl = document.getElementById('local-record');
     const streakEl = document.getElementById('streak');
     const multiplierEl = document.getElementById('multiplier-display');
     const livesEl = document.getElementById('lives');
@@ -341,6 +351,7 @@
     let gameRunning = false;
     let score = 0;
     let highscore = 0; 
+    let localRecord = 0;
     let lives = 3;
     let currentProblem = null;
     let particles = [];
@@ -358,7 +369,7 @@
     let streak = 0;
     let multiplier = 1;
     let cachedLeaderboard = [];
-    let currentTheme = { skyTop: "#E0F7FA", skyBottom: "#87CEEB", platformNormal: "#8e44ad", platformSafe: "#4CAF50", player: "#FF5722", particle: "#2ecc71" };
+    let currentTheme = { platformNormal: "#8e44ad", platformSafe: "#4CAF50", player: "#FF5722", particle: "#2ecc71" };
 
     function resize() {
         const winW = window.innerWidth;
@@ -407,6 +418,31 @@
             else ctrl.classList.remove('active');
         }
     };
+
+    // --- Hintergrund Dynamik ---
+    function updateBackground(camY) {
+        const h = Math.max(0, camY);
+        const dayTop = [224, 247, 250], dayBot = [135, 206, 235];
+        const nightTop = [10, 10, 20], nightBot = [0, 0, 0];
+        const p = Math.min(h / 12000, 1);
+        const rT = Math.round(dayTop[0] + (nightTop[0] - dayTop[0]) * p);
+        const gT = Math.round(dayTop[1] + (nightTop[1] - dayTop[1]) * p);
+        const bT = Math.round(dayTop[2] + (nightTop[2] - dayTop[2]) * p);
+        const rB = Math.round(dayBot[0] + (nightBot[0] - dayBot[0]) * p);
+        const gB = Math.round(dayBot[1] + (nightBot[1] - dayBot[1]) * p);
+        const bB = Math.round(dayBot[2] + (nightBot[2] - dayBot[2]) * p);
+        const container = document.getElementById('game-container');
+        container.style.background = `linear-gradient(to top, rgb(${rT},${gT},${bT}), rgb(${rB},${gB},${bB}))`;
+        if (p > 0.6) document.body.classList.add('night-hud');
+        else document.body.classList.remove('night-hud');
+    }
+
+    // --- Rekord laden ---
+    function loadLocalRecord() {
+        const stored = localStorage.getItem('einmaleins_local_record');
+        localRecord = stored ? parseInt(stored) : 0;
+        localRecordEl.innerText = localRecord;
+    }
 
     async function fetchLeaderboard() {
         if (!GOOGLE_SCRIPT_URL) return [];
@@ -457,15 +493,10 @@
         if (name) {
             localStorage.setItem('einmaleins_player_name', name);
             const btn = document.getElementById('save-score-btn');
-            
             btn.innerText = "Gespeichert! ✅";
             btn.disabled = true;
             playerNameInput.disabled = true;
-
-            submitToGoogleSheet(name, score, currentDifficulty.label).then(() => {
-                fetchLeaderboard();
-            });
-            
+            submitToGoogleSheet(name, score, currentDifficulty.label).then(() => { fetchLeaderboard(); });
             initMenuNavigation('gameover');
         } else {
             alert("Bitte gib einen Namen ein!");
@@ -476,6 +507,7 @@
     window.showLeaderboard = showLeaderboard;
     window.showStartScreen = () => { 
         gameRunning = false; 
+        updateBackground(0); 
         startScreen.classList.remove('hidden'); gameOverScreen.classList.add('hidden'); leaderboardScreen.classList.add('hidden'); questionWrapper.classList.add('hidden'); 
         updateMobileControlsVisibility(); 
         initMenuNavigation('start');
@@ -486,7 +518,7 @@
     window.toggleFullscreen = toggleFullscreen;
 
     window.onload = () => {
-        resize(); loadTouchControlsState(); fetchLeaderboard(); initMenuNavigation('start');
+        resize(); loadTouchControlsState(); fetchLeaderboard(); loadLocalRecord(); initMenuNavigation('start');
         document.getElementById('player-name-input').addEventListener('keydown', function(event) {
             if (event.key === 'Enter') submitHighscore();
         });
@@ -504,43 +536,39 @@
     window.addEventListener('keydown', (e) => {
         const k = getKey(e.code);
         if (k) { keys[k] = true; if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); }
-        
         if (!gameRunning && menuNavElements.length > 0) {
             if (document.activeElement === playerNameInput) {
                 if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') return;
                 if (e.key === 'ArrowDown') { e.preventDefault(); playerNameInput.blur(); } else return;
             }
-
             let nextIndex = menuNavIndex;
             const isStartScreen = !startScreen.classList.contains('hidden');
-
             if (isStartScreen) {
-                // VERBESSERTE NAVIGATION FÜR ALLE BUTTONS
                 if (e.key === 'ArrowDown' || e.key === 's') {
-                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = menuNavIndex + 2; // Schwierigkeit Zeile 1 -> 2
-                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = 4;           // Schwierigkeit Zeile 2 -> Ruhmeshalle
-                    else if (menuNavIndex === 4) nextIndex = 5;                                 // Ruhmeshalle -> Steuerung (Keyboard)
-                    else nextIndex = 0;                                                         // Steuerung -> Anfang (Plus)
+                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = menuNavIndex + 2;
+                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = 4;
+                    else if (menuNavIndex === 4) nextIndex = 5;
+                    else nextIndex = 0;
                     e.preventDefault();
                 } else if (e.key === 'ArrowUp' || e.key === 'w') {
-                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = 5;                // Anfang -> Steuerung (Keyboard)
-                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = menuNavIndex - 2; // Zeile 2 -> 1
-                    else if (menuNavIndex === 4) nextIndex = 2;                                 // Ruhmeshalle -> Zeile 2
-                    else if (menuNavIndex === 5 || menuNavIndex === 6) nextIndex = 4;           // Steuerung -> Ruhmeshalle
+                    if (menuNavIndex === 0 || menuNavIndex === 1) nextIndex = 5;
+                    else if (menuNavIndex === 2 || menuNavIndex === 3) nextIndex = menuNavIndex - 2;
+                    else if (menuNavIndex === 4) nextIndex = 2;
+                    else if (menuNavIndex === 5 || menuNavIndex === 6) nextIndex = 4;
                     e.preventDefault();
                 } else if (e.key === 'ArrowRight' || e.key === 'd') {
-                    if (menuNavIndex === 4) nextIndex = 4;                                      // Ruhmeshalle bleibt
-                    else if (menuNavIndex === 5) nextIndex = 6;                                 // Steuerung L -> R
-                    else if (menuNavIndex === 6) nextIndex = 5;                                 // Steuerung R -> L (Loop)
-                    else if (menuNavIndex % 2 === 0) nextIndex = menuNavIndex + 1;              // Gitter L -> R
-                    else nextIndex = menuNavIndex - 1;                                          // Gitter R -> L (Loop)
+                    if (menuNavIndex === 4) nextIndex = 4;
+                    else if (menuNavIndex === 5) nextIndex = 6;
+                    else if (menuNavIndex === 6) nextIndex = 5;
+                    else if (menuNavIndex % 2 === 0) nextIndex = menuNavIndex + 1;
+                    else nextIndex = menuNavIndex - 1;
                     e.preventDefault();
                 } else if (e.key === 'ArrowLeft' || e.key === 'a') {
                     if (menuNavIndex === 4) nextIndex = 4;
-                    else if (menuNavIndex === 6) nextIndex = 5;                                 // Steuerung R -> L
-                    else if (menuNavIndex === 5) nextIndex = 6;                                 // Steuerung L -> R (Loop)
-                    else if (menuNavIndex % 2 === 1) nextIndex = menuNavIndex - 1;              // Gitter R -> L
-                    else nextIndex = menuNavIndex + 1;                                          // Gitter L -> R (Loop)
+                    else if (menuNavIndex === 6) nextIndex = 5;
+                    else if (menuNavIndex === 5) nextIndex = 6;
+                    else if (menuNavIndex % 2 === 1) nextIndex = menuNavIndex - 1;
+                    else nextIndex = menuNavIndex + 1;
                     e.preventDefault();
                 }
             } else {
@@ -552,12 +580,9 @@
                     e.preventDefault();
                 }
             }
-
             if (e.key === 'Enter' || e.key === ' ') { 
                 e.preventDefault(); 
-                if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) {
-                    menuNavElements[menuNavIndex].click(); 
-                }
+                if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) { menuNavElements[menuNavIndex].click(); }
             } else { 
                 menuNavIndex = nextIndex; 
                 updateMenuNavVisuals(); 
@@ -573,7 +598,6 @@
     function initMenuNavigation(screenName) {
         menuNavElements = [];
         if (screenName === 'start') { 
-            // Alle interaktiven Elemente sammeln
             const diffs = Array.from(document.querySelectorAll('.diff-btn'));
             const leader = document.getElementById('leaderboard-btn');
             const modes = Array.from(document.querySelectorAll('.mode-btn'));
@@ -588,10 +612,7 @@
             if (backBtn) menuNavElements.push(backBtn);
         }
         document.querySelectorAll('.keyboard-focus').forEach(el => el.classList.remove('keyboard-focus'));
-        if (menuNavElements.length > 0) { 
-            menuNavIndex = 0; 
-            updateMenuNavVisuals(); 
-        }
+        if (menuNavElements.length > 0) { menuNavIndex = 0; updateMenuNavVisuals(); }
     }
 
     function updateMenuNavVisuals() {
@@ -647,7 +668,6 @@
         update(player, dt) {
             if (this.broken && !this.isPermanent) return; 
             if (gameOverPending && !this.isPermanent) return;
-
             if (this.breaking) {
                 this.breakTimer += dt; this.shakeOffset = (Math.random() - 0.5) * 10; 
                 if (this.breakTimer > 30) { this.broken = true; if (!this.isPermanent) createParticles(this.x + this.w/2, this.y + this.h/2 + cameraY, '#e74c3c'); }
@@ -670,6 +690,14 @@
             let pts = 10 * multiplier; const time = Date.now() - questionStartTime;
             if (time <= 5000) pts += 5;
             score += pts; scoreEl.innerText = score; streak++; streakEl.innerText = streak;
+            
+            // Lokalen Rekord prüfen und speichern
+            if (score > localRecord) {
+                localRecord = score;
+                localRecordEl.innerText = localRecord;
+                localStorage.setItem('einmaleins_local_record', localRecord);
+            }
+
             if (streak === 5) activateMultiplier(2); else if (streak === 10) activateMultiplier(3);
             createParticles(this.x + this.w/2, this.y + cameraY, currentTheme.particle); 
             player.vy = 0; player.readyForSuperJump = true; this.isSolved = true; generateLevel();
@@ -792,6 +820,7 @@
         player = new Player(); nextPlatformY = gy - LEVEL_HEIGHT_GAP;
         gameRunning = true; startScreen.classList.add('hidden'); gameOverScreen.classList.add('hidden'); leaderboardScreen.classList.add('hidden');
         menuNavElements = []; generateLevel(); updateMobileControlsVisibility();
+        updateBackground(0); 
         if (!gameLoopId) loop();
     };
 
@@ -832,6 +861,7 @@
             allPlatforms.forEach(p => p.update(player, dt));
             particles.forEach((p, i) => { p.update(dt); if(p.life <= 0) particles.splice(i, 1); });
             backgroundObjects.forEach(b => b.update(dt));
+            updateBackground(cameraY);
         }
         ctx.save(); ctx.translate(0, cameraY); 
         backgroundObjects.forEach(b => b.draw()); allPlatforms.forEach(p => p.draw());
