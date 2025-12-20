@@ -9,7 +9,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;700;900&display=swap');
 
-        /* WICHTIG: touch-action: none auf body verhindert Spiel-Scrollen, aber wir überschreiben es unten für Menüs */
+        /* WICHTIG: touch-action: none auf body verhindert Spiel-Scrollen */
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; background-color: #202028; overflow: hidden; font-family: 'Roboto', sans-serif; touch-action: none; }
         
         #game-container { 
@@ -42,13 +42,13 @@
         }
         
         .hud-left { display: flex; flex-direction: column; align-items: flex-start; }
-        .hud-text { font-family: 'Fredoka One', cursive; font-size: 2rem; color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 5px; }
-        .hud-subtext { font-family: 'Fredoka One', cursive; font-size: 1.5rem; color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 5px; }
-        .hud-record { font-family: 'Fredoka One', cursive; font-size: 1.2rem; color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; }
+        .hud-text { font-family: 'Fredoka One', cursive; font-size: clamp(1.2rem, 4vw, 2rem); color: #333; text-shadow: 2px 2px 0px #fff; margin-bottom: 5px; }
+        .hud-subtext { font-family: 'Fredoka One', cursive; font-size: clamp(1rem, 3vw, 1.5rem); color: #FF5722; text-shadow: 1px 1px 0px #fff; margin-bottom: 5px; }
+        .hud-record { font-family: 'Fredoka One', cursive; font-size: clamp(0.8rem, 2.5vw, 1.2rem); color: #FF9800; text-shadow: 1px 1px 0px #fff; z-index: 10; }
         .multiplier-anim { animation: pulseText 0.5s infinite alternate; color: #D32F2F; margin-left: 10px; font-size: 1.5rem; display: inline-block; }
         @keyframes pulseText { from { transform: scale(1); } to { transform: scale(1.2); } }
         .hud-center { pointer-events: auto; display: flex; gap: 10px; }
-        #restart-hud-btn, #hint-btn { font-family: 'Fredoka One', cursive; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; font-size: 1.2rem; padding: 5px 15px; color: white; }
+        #restart-hud-btn, #hint-btn { font-family: 'Fredoka One', cursive; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; font-size: clamp(0.8rem, 3vw, 1.2rem); padding: 5px 15px; color: white; }
         #restart-hud-btn { background: #FF9800; box-shadow: 0 4px 0 #F57C00; }
         #restart-hud-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #F57C00; }
         #hint-btn { background: #1E90FF; box-shadow: 0 4px 0 #104E8B; }
@@ -77,28 +77,70 @@
             align-items: center; 
             z-index: 10; 
             
-            /* SCROLLING ENABLED & FIX FOR BOUNCING */
+            /* SCROLLING ENABLED */
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch;
-            touch-action: pan-y !important; /* WICHTIG: Erlaubt vertikales Scrollen trotz body-Sperre */
+            touch-action: pan-y !important; 
             
-            /* SAFE SPACING & ALIGNMENT */
-            padding-top: max(60px, env(safe-area-inset-top)); 
-            padding-bottom: max(40px, env(safe-area-inset-bottom));
-            justify-content: flex-start; 
+            /* DYNAMISCHES PADDING: Weniger Padding auf kleinen Screens */
+            padding-top: max(clamp(10px, 5vh, 60px), env(safe-area-inset-top)); 
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            justify-content: center; /* Standard Center */
         }
         
-        /* Center content if screen is tall enough */
-        @media (min-height: 850px) {
-             #start-screen, #game-over-screen { justify-content: center; padding-top: 0; }
+        /* Wenn Screen sehr klein/querformat, oben anfangen damit man scrollen kann, falls nötig */
+        @media (max-height: 500px) {
+             #start-screen, #game-over-screen { justify-content: flex-start; padding-top: 10px; }
         }
 
-        h1 { font-family: 'Fredoka One', cursive; color: #FFD700; font-size: 3.5rem; margin-bottom: 10px; text-shadow: 4px 4px 0 #333; text-align: center; flex-shrink: 0; }
-        p { color: white; font-size: 1.2rem; margin-bottom: 20px; text-align: center; max-width: 600px; line-height: 1.5; padding: 0 10px; flex-shrink: 0; }
+        /* Dynamische Schriftgröße basierend auf Viewport Height (vh) */
+        h1 { 
+            font-family: 'Fredoka One', cursive; 
+            color: #FFD700; 
+            font-size: clamp(2rem, 8vh, 4rem); /* Passt sich der Höhe an */
+            margin-bottom: 2vh; 
+            text-shadow: 4px 4px 0 #333; 
+            text-align: center; 
+            flex-shrink: 0; 
+        }
+        p { 
+            color: white; 
+            font-size: clamp(0.9rem, 2.5vh, 1.2rem); 
+            margin-bottom: 2vh; 
+            text-align: center; 
+            max-width: 600px; 
+            line-height: 1.4; 
+            padding: 0 10px; 
+            flex-shrink: 0; 
+        }
         
-        #difficulty-container { display: flex; flex-direction: column; gap: 10px; width: 90%; max-width: 450px; margin-bottom: 20px; flex-shrink: 0; }
-        .diff-btn { background: #4CAF50; border: none; padding: 12px 20px; font-size: 1.3rem; font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 0 #2E7D32; transition: transform 0.1s, box-shadow 0.1s; text-align: center; position: relative; width: 100%; }
-        .diff-btn span { display: block; font-size: 0.9rem; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+        #difficulty-container { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1.5vh; 
+            width: 90%; 
+            max-width: 450px; 
+            margin-bottom: 2vh; 
+            flex-shrink: 0; 
+        }
+
+        /* BUTTONS dynamisch */
+        .diff-btn { 
+            background: #4CAF50; 
+            border: none; 
+            padding: clamp(8px, 2vh, 15px) 20px; 
+            font-size: clamp(1rem, 3vh, 1.3rem); 
+            font-family: 'Fredoka One', cursive; 
+            color: white; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            box-shadow: 0 0.5vh 0 #2E7D32; 
+            transition: transform 0.1s, box-shadow 0.1s; 
+            text-align: center; 
+            position: relative; 
+            width: 100%; 
+        }
+        .diff-btn span { display: block; font-size: 0.7em; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 2px; }
         .diff-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #2E7D32; }
         .diff-1 { background: #8BC34A; box-shadow: 0 4px 0 #689F38; } 
         .diff-2 { background: #2196F3; box-shadow: 0 4px 0 #1976D2; } 
@@ -106,8 +148,8 @@
         .diff-4 { background: #E91E63; box-shadow: 0 4px 0 #C2185B; } 
         .diff-5 { background: #9C27B0; box-shadow: 0 4px 0 #7B1FA2; } 
         
-        #game-over-btn, #leaderboard-btn, #save-score-btn { background: #4CAF50; border: none; padding: 15px 40px; font-size: 2rem; font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; transition: transform 0.1s; margin-top: 10px; flex-shrink: 0; }
-        #leaderboard-btn { background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: 1.5rem; padding: 10px 30px; }
+        #game-over-btn, #leaderboard-btn, #save-score-btn { background: #4CAF50; border: none; padding: clamp(10px, 2vh, 15px) 40px; font-size: clamp(1.2rem, 4vh, 2rem); font-family: 'Fredoka One', cursive; color: white; border-radius: 10px; cursor: pointer; box-shadow: 0 6px 0 #2E7D32; transition: transform 0.1s; margin-top: 10px; flex-shrink: 0; }
+        #leaderboard-btn { background: #FF9800; box-shadow: 0 6px 0 #F57C00; font-size: clamp(1rem, 3vh, 1.5rem); padding: 10px 30px; }
         
         #leaderboard-header { display: flex; justify-content: space-between; padding: 10px 15px; color: #aaa; font-size: 0.9rem; font-family: 'Roboto', sans-serif; border-bottom: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 500px; margin-bottom: 5px; box-sizing: border-box; }
         
@@ -128,8 +170,8 @@
         #highscore-input-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; width: 100%; }
         #player-name-input { padding: 10px 15px; font-size: 1.5rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 80%; max-width: 300px; outline: none; }
         
-        .controls-selection { margin-top: 20px; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
-        .controls-label { color: #ccc; font-size: 1rem; margin-bottom: 10px; font-family: 'Roboto', sans-serif; }
+        .controls-selection { margin-top: 2vh; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
+        .controls-label { color: #ccc; font-size: 1rem; margin-bottom: 5px; font-family: 'Roboto', sans-serif; }
         .toggle-container { display: flex; gap: 15px; justify-content: center; }
         .mode-btn { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 1.1rem; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
         .mode-btn:hover { background: rgba(255,255,255,0.25); }
@@ -152,19 +194,25 @@
         #fullscreen-btn { position: absolute; top: max(20px, env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); z-index: 20; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.5); color: white; border-radius: 10px; padding: 5px 10px; cursor: pointer; font-family: 'Fredoka One', cursive; font-size: 0.9rem; transition: background 0.2s; }
         #fullscreen-btn:hover { background: rgba(0,0,0,0.6); }
 
-        /* Media Query for small vertical screens (Landscape Mobile/iPad) */
-        @media (max-height: 600px) {
-            h1 { font-size: 2.2rem; margin-bottom: 5px; }
-            .diff-btn { padding: 8px 12px; font-size: 1rem; }
-            .diff-btn span { font-size: 0.8rem; }
-            #difficulty-container { gap: 5px; margin-bottom: 10px; width: 80%; }
-            #leaderboard-btn { padding: 8px 20px; font-size: 1.2rem; margin-top: 5px; }
-            .controls-selection { margin-top: 10px; padding-bottom: 10px; }
-            .mode-btn { padding: 6px 15px; font-size: 0.9rem; }
-            /* Adjustments for Game Over */
-            #game-over-screen h1 { font-size: 2.5rem; }
-            #game-over-screen p { margin-bottom: 10px; }
-            #game-over-btn { padding: 10px 30px; font-size: 1.5rem; }
+        /* --- SPEZIALMODUS: Landscape / Kleiner Bildschirm --- */
+        /* Wir ordnen die Buttons nebeneinander an, wenn wenig Platz in der Höhe ist */
+        @media (max-height: 600px) and (orientation: landscape) {
+            #difficulty-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr; /* Zwei Spalten */
+                gap: 8px;
+                margin-bottom: 5px;
+            }
+            .diff-btn:last-child {
+                grid-column: span 2; /* Der letzte Button nimmt ganze Breite */
+            }
+            .diff-btn { padding: 5px 5px; min-height: 40px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+            h1 { font-size: 6vh; margin-bottom: 2px; }
+            #leaderboard-btn { padding: 5px 10px; font-size: 0.9rem; margin-top: 5px; }
+            .controls-selection { margin-top: 5px; padding-bottom: 5px; }
+            .mode-btn { padding: 4px 12px; font-size: 0.8rem; }
+            .controls-label { font-size: 0.8rem; margin-bottom: 2px; }
+            #start-screen { padding-top: 5px; justify-content: center; }
         }
     </style>
 </head>
