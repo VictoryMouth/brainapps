@@ -177,6 +177,15 @@
         /* Neuer Retry Button Style */
         #retry-btn { background: #2196F3; box-shadow: 0 6px 0 #1976D2; }
         #retry-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #1976D2; }
+
+        /* Keyboard Navigation Focus Style */
+        .keyboard-focus {
+            transform: scale(1.05);
+            border-color: #FFF !important;
+            box-shadow: 0 0 15px #FFD700, 0 0 5px #FFF inset !important;
+            z-index: 20;
+            outline: none; /* remove default browser outline */
+        }
         
         #leaderboard-header { display: flex; justify-content: space-between; padding: 10px 15px; color: #aaa; font-size: 0.9rem; font-family: 'Roboto', sans-serif; border-bottom: 1px solid rgba(255,255,255,0.2); width: 90%; max-width: 500px; margin-bottom: 5px; box-sizing: border-box; }
         
@@ -207,6 +216,12 @@
             padding: 10px 15px; font-size: 1.2rem; border-radius: 8px; border: 3px solid #FFD700; margin-bottom: 10px; text-align: center; font-family: 'Fredoka One', cursive; width: 70%; max-width: 300px; outline: none; 
             pointer-events: auto; user-select: text; -webkit-user-select: text;
         }
+
+        /* NEU: Ladebalken Styles */
+        #save-loading-bar { width: 70%; max-width: 300px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; margin-top: 10px; overflow: hidden; display: none; }
+        #save-loading-bar.active { display: block; }
+        .bar-fill { height: 100%; background: #4CAF50; width: 0%; animation: loadProgress 1s infinite ease-in-out; }
+        @keyframes loadProgress { 0% { width: 0%; margin-left: 0; } 50% { width: 100%; margin-left: 0; } 100% { width: 0%; margin-left: 100%; } }
         
         .controls-selection { margin-top: 2vh; text-align: center; flex-shrink: 0; padding-bottom: 20px; }
         .controls-label { color: #ccc; font-size: 0.9rem; margin-bottom: 5px; font-family: 'Roboto', sans-serif; }
@@ -342,6 +357,8 @@
             <p style="color: #FFD700; font-size: 1.4rem;">Gut gemacht! 🌟</p>
             <input type="text" id="player-name-input" placeholder="Dein Name" maxlength="10">
             <button id="save-score-btn" onclick="submitHighscore()">Online Speichern 💾</button>
+            <!-- NEU: Ladebalken Element -->
+            <div id="save-loading-bar"><div class="bar-fill"></div></div>
         </div>
         <p id="motivation-text">Mathe-Coach analysiert... ✨</p>
         <div id="game-over-buttons">
@@ -396,6 +413,10 @@
     // Control Mode Buttons
     const btnModeKeyboard = document.getElementById('btn-mode-keyboard');
     const btnModeTouch = document.getElementById('btn-mode-touch');
+
+    // Menu Navigation Globals
+    let menuNavElements = [];
+    let menuNavIndex = -1;
 
     const API_MODEL = "gemini-2.5-flash-preview-09-2025";
     const TTS_MODEL = "gemini-2.5-flash-preview-tts";
@@ -580,6 +601,9 @@
         const ctrl = document.getElementById('mobile-controls');
         if(ctrl) ctrl.classList.remove('active');
         
+        // Navigation initialisieren
+        initMenuNavigation('leaderboard');
+        
         const list = await fetchLeaderboard();
         
         leaderboardLoading.classList.add('hidden');
@@ -606,23 +630,29 @@
     async function submitHighscore() {
         const name = playerNameInput.value.trim().substring(0, 10);
         if (name) {
+            localStorage.setItem('einmaleins_player_name', name);
+            
             const btn = document.getElementById('save-score-btn');
-            btn.innerText = "Speichere...";
-            btn.disabled = true;
+            const loader = document.getElementById('save-loading-bar');
+            
+            // UI: Laden starten
+            btn.classList.add('hidden');
+            loader.classList.add('active');
             playerNameInput.disabled = true;
 
             await submitToGoogleSheet(name, score, currentDifficulty.label);
             await fetchLeaderboard();
             
+            // UI: Laden fertig
+            loader.classList.remove('active');
+            btn.classList.remove('hidden');
             btn.innerText = "Gespeichert! ✅";
+            btn.disabled = true;
             
-            // Nach kurzer Zeit Eingabefeld ausblenden, aber auf dem Screen bleiben
-            setTimeout(() => {
-                highscoreInputContainer.classList.add('hidden');
-            }, 1000);
+            // Refresh nav list to remove save button and select Retry
+            initMenuNavigation('gameover');
             
-            // NICHT MEHR AUTOMATISCH ZUR RUHMESHALLE WECHSELN
-            // showLeaderboard(); 
+            // HINWEIS: Das Menü bleibt jetzt offen, kein setTimeout mehr!
         } else {
             alert("Bitte gib einen Namen ein!");
         }
@@ -637,6 +667,7 @@
         leaderboardScreen.classList.add('hidden'); 
         questionWrapper.classList.add('hidden'); 
         updateMobileControlsVisibility(); 
+        initMenuNavigation('start');
     };
     
     // Neuer Retry-Handler
@@ -652,6 +683,7 @@
         resize();
         loadTouchControlsState();
         fetchLeaderboard();
+        initMenuNavigation('start'); // Init navigation on load
         
         // Enter-Key Listener für Highscore Input
         document.getElementById('player-name-input').addEventListener('keydown', function(event) {
@@ -672,13 +704,94 @@
         return null;
     };
     window.addEventListener('keydown', (e) => {
+        // Game Logic
         const k = getKey(e.code);
-        if (k) { keys[k] = true; if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); }
+        if (k) { 
+            keys[k] = true; 
+            if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); 
+        }
+        
+        // Menu Navigation Logic
+        if (!gameRunning && menuNavElements.length > 0) {
+            // Filter out input editing (if focus is strictly on input)
+            if (document.activeElement === playerNameInput) {
+                // Allow Tab or Enter, but let Arrows work for text
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') return;
+                // Allow Down to escape input to buttons?
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    playerNameInput.blur(); // Unfocus input
+                    // Focus logic handles the rest below
+                } else {
+                    return; // Let native input handling happen (typing)
+                }
+            }
+
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 's' || e.key === 'd') {
+                e.preventDefault();
+                menuNavIndex = (menuNavIndex + 1) % menuNavElements.length;
+                updateMenuNavVisuals();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'w' || e.key === 'a') {
+                e.preventDefault();
+                menuNavIndex = (menuNavIndex - 1 + menuNavElements.length) % menuNavElements.length;
+                updateMenuNavVisuals();
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) {
+                    // Visual feedback and click
+                    menuNavElements[menuNavIndex].click();
+                }
+            }
+        }
     });
+    
     window.addEventListener('keyup', (e) => {
         const k = getKey(e.code);
         if (k) { keys[k] = false; if (k === 'up' && player) player.canJumpRelease = true; }
     });
+    
+    // --- KEYBOARD MENU NAVIGATION HELPERS ---
+    function initMenuNavigation(screenName) {
+        menuNavElements = [];
+        menuNavIndex = -1;
+        
+        if (screenName === 'start') {
+            const diffs = Array.from(document.querySelectorAll('.diff-btn'));
+            const leader = document.getElementById('leaderboard-btn');
+            menuNavElements = [...diffs, leader];
+        } else if (screenName === 'gameover') {
+            const saveBtn = document.getElementById('save-score-btn');
+            const retryBtn = document.getElementById('retry-btn');
+            const menuBtn = document.getElementById('game-over-btn');
+            
+            // Check if save button is available
+            if (!highscoreInputContainer.classList.contains('hidden') && !saveBtn.classList.contains('hidden') && !saveBtn.disabled) {
+                menuNavElements.push(saveBtn); 
+            }
+            menuNavElements.push(retryBtn, menuBtn);
+        } else if (screenName === 'leaderboard') {
+            const backBtn = leaderboardScreen.querySelector('button');
+            if (backBtn) menuNavElements.push(backBtn);
+        }
+        
+        // Reset visual state
+        document.querySelectorAll('.keyboard-focus').forEach(el => el.classList.remove('keyboard-focus'));
+        
+        // Select first element if available
+        if (menuNavElements.length > 0) {
+            menuNavIndex = 0;
+            updateMenuNavVisuals();
+        }
+    }
+
+    function updateMenuNavVisuals() {
+        document.querySelectorAll('.keyboard-focus').forEach(el => el.classList.remove('keyboard-focus'));
+        if (menuNavIndex >= 0 && menuNavElements[menuNavIndex]) {
+            const el = menuNavElements[menuNavIndex];
+            el.classList.add('keyboard-focus');
+            el.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+        }
+    }
 
     const addTouch = (elem, keyName) => {
         elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
@@ -981,6 +1094,9 @@
         gameOverScreen.classList.add('hidden'); 
         leaderboardScreen.classList.add('hidden');
         
+        // Reset nav array to prevent accidental clicks
+        menuNavElements = [];
+        
         generateLevel();
         updateMobileControlsVisibility();
         
@@ -991,12 +1107,20 @@
         gameRunning = false; finalScoreEl.innerText = score;
         
         // Reset für neues Spiel (Eingabefeld & Button zurücksetzen)
-        playerNameInput.value = "";
+        const storedName = localStorage.getItem('einmaleins_player_name');
+        playerNameInput.value = storedName || "";
         playerNameInput.disabled = false;
+        
         const saveBtn = document.getElementById('save-score-btn');
+        const loader = document.getElementById('save-loading-bar');
+        
         if(saveBtn) {
             saveBtn.innerText = "Online Speichern 💾";
             saveBtn.disabled = false;
+            saveBtn.classList.remove('hidden');
+        }
+        if(loader) {
+            loader.classList.remove('active');
         }
 
         // Immer anzeigen, wenn Punkte > 0
@@ -1013,6 +1137,9 @@
         gameOverScreen.classList.remove('hidden');
         motivationTextEl.innerText = "Coach lädt...";
         updateMobileControlsVisibility();
+        
+        // Init navigation for game over screen
+        initMenuNavigation('gameover');
         
         let msg = await callGeminiLLM(`Motiviere Spieler für ${score} Punkte.`);
         if (!msg) {
