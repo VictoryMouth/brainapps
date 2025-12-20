@@ -367,7 +367,7 @@
 
 <script>
     // --- KONFIGURATION ---
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxNveuiGjI7a_M3SUy3hHSodjnZX0se7RDZ1V-XVCQOfa60cZgVyFDkyezIDRvseBF6/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwIP_k1eJJ71Ms_wmFz9f2HN8zHh0QxfnQ5oXYo6F0EUmSwJKY608VdGMQlhYm_nwiK/exec"; 
 
     // --- GLOBALS ---
     const canvas = document.getElementById('gameCanvas');
@@ -607,19 +607,22 @@
         const name = playerNameInput.value.trim().substring(0, 10);
         if (name) {
             const btn = document.getElementById('save-score-btn');
-            const originalText = btn.innerText;
             btn.innerText = "Speichere...";
             btn.disabled = true;
+            playerNameInput.disabled = true;
 
             await submitToGoogleSheet(name, score, currentDifficulty.label);
             await fetchLeaderboard();
             
-            btn.innerText = originalText;
-            btn.disabled = false;
+            btn.innerText = "Gespeichert! ✅";
             
-            highscoreInputContainer.classList.add('hidden');
-            gameOverButtons.classList.remove('hidden');
-            showLeaderboard();
+            // Nach kurzer Zeit Eingabefeld ausblenden, aber auf dem Screen bleiben
+            setTimeout(() => {
+                highscoreInputContainer.classList.add('hidden');
+            }, 1000);
+            
+            // NICHT MEHR AUTOMATISCH ZUR RUHMESHALLE WECHSELN
+            // showLeaderboard(); 
         } else {
             alert("Bitte gib einen Namen ein!");
         }
@@ -940,6 +943,15 @@
     async function gameOver() {
         gameRunning = false; finalScoreEl.innerText = score;
         
+        // Reset für neues Spiel (Eingabefeld & Button zurücksetzen)
+        playerNameInput.value = "";
+        playerNameInput.disabled = false;
+        const saveBtn = document.getElementById('save-score-btn');
+        if(saveBtn) {
+            saveBtn.innerText = "Online Speichern 💾";
+            saveBtn.disabled = false;
+        }
+
         // Immer anzeigen, wenn Punkte > 0
         if (score > 0) {
             highscoreInputContainer.classList.remove('hidden'); 
