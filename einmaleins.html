@@ -460,4 +460,311 @@
     const getKey = (code) => {
         if (code === 'ArrowLeft' || code === 'KeyA') return 'left';
         if (code === 'ArrowRight' || code === 'KeyD') return 'right';
-        if (code === 'ArrowUp' || code === 'KeyW' || code === 'Space
+        if (code === 'ArrowUp' || code === 'KeyW' || code === 'Space') return 'up';
+        return null;
+    };
+    window.addEventListener('keydown', (e) => {
+        const k = getKey(e.code);
+        if (k) { keys[k] = true; if(['ArrowUp','Space','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault(); }
+    });
+    window.addEventListener('keyup', (e) => {
+        const k = getKey(e.code);
+        if (k) { keys[k] = false; if (k === 'up' && player) player.canJumpRelease = true; }
+    });
+
+    const addTouch = (elem, keyName) => {
+        elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+        elem.addEventListener('touchend', (e) => { 
+            e.preventDefault(); keys[keyName] = false; 
+            if (keyName === 'up' && player) player.canJumpRelease = true;
+        });
+    };
+    addTouch(document.getElementById('btn-left'), 'left');
+    addTouch(document.getElementById('btn-right'), 'right');
+    addTouch(document.getElementById('btn-jump'), 'up');
+
+    class Player {
+        constructor() {
+            this.w = 40; this.h = 40; this.x = canvas.width/2 - 20; this.y = canvas.height - GROUND_HEIGHT - this.h; 
+            this.vx = 0; this.vy = 0; this.color = currentTheme.player; this.grounded = false;
+            this.facingRight = true; this.readyForSuperJump = false; this.canJumpRelease = true;
+        }
+        update() {
+            if (keys.left) { this.vx = -SPEED; this.facingRight = false; }
+            else if (keys.right) { this.vx = SPEED; this.facingRight = true; }
+            else { this.vx *= 0.8; }
+            if (this.grounded && !keys.up) this.canJumpRelease = true;
+            if (keys.up && this.canJumpRelease) {
+                if (this.readyForSuperJump) { this.vy = SUPER_JUMP_FORCE; this.grounded = false; this.readyForSuperJump = false; this.canJumpRelease = false; }
+                else if (this.grounded) { this.vy = currentJumpForce; this.grounded = false; this.canJumpRelease = false; }
+            }
+            this.x += this.vx; this.y += this.vy; this.vy += currentGravity; 
+            if (this.x < 0) this.x = 0; if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+        }
+        draw() {
+            ctx.save(); ctx.translate(this.x + this.w/2, this.y + this.h/2); 
+            if (multiplier > 1) { ctx.shadowBlur = 20; ctx.shadowColor = multiplier >= 3 ? '#FFD700' : '#00E5FF'; }
+            ctx.fillStyle = this.readyForSuperJump ? '#FFD700' : currentTheme.player;
+            ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+            ctx.fillStyle = 'white'; const eyeOffset = this.facingRight ? 8 : -8;
+            ctx.fillRect(eyeOffset - 2, -10, 8, 8); ctx.fillRect(eyeOffset - 12, -10, 8, 8);
+            ctx.fillStyle = 'black'; ctx.fillRect(eyeOffset, -8, 4, 4); ctx.fillRect(eyeOffset - 10, -8, 4, 4);
+            ctx.restore();
+        }
+    }
+
+    class Platform {
+        constructor(x, y, value, isCorrect, isPermanent = false) { 
+            this.x = x; this.y = y; this.w = PLATFORM_WIDTH; this.h = 30; this.value = value;
+            this.isCorrect = isCorrect; this.isPermanent = isPermanent; this.breaking = false;
+            this.broken = false; this.isSolved = false; this.breakTimer = 0; this.shakeOffset = 0;
+        }
+        update(player) {
+            if (this.broken && !this.isPermanent) return; 
+            if (this.breaking) {
+                this.breakTimer++; this.shakeOffset = (Math.random() - 0.5) * 10; 
+                if (this.breakTimer > 30) { this.broken = true; if (!this.isPermanent) createParticles(this.x + this.w/2, this.y + this.h/2 + cameraY, '#e74c3c'); }
+                return; 
+            }
+            if (gameOverPending && !this.isPermanent) return;
+            const py = this.y + cameraY; const pb = player.y + player.h; const prevPb = (player.y - player.vy) + player.h;
+            if (player.vy > 0 && pb >= py && prevPb <= py + 10 && player.x + player.w > this.x && player.x < this.x + this.w) {
+                player.y = py - player.h; player.vy = 0; player.grounded = true; this.triggerEffect(player);
+            }
+        }
+        triggerEffect(player) {
+            if (this.isPermanent) { player.readyForSuperJump = false; isInvulnerable = false; if (gameOverPending) gameOver(); return; }
+            if (this.isCorrect) {
+                if (gameOverPending) return; isInvulnerable = false;
+                if (this.isSolved) { player.readyForSuperJump = true; return; }
+                this.handleCorrectAnswer(player);
+            } else { this.breaking = true; this.handleWrongAnswer(); }
+        }
+        handleCorrectAnswer(player) {
+            let pts = 10 * multiplier; const time = Date.now() - questionStartTime;
+            if (time <= 5000) { pts += 5; createFloatingText(player.x, player.y - 40, "Speed Bonus!", "#FFD700"); }
+            score += pts; scoreEl.innerText = score; streak++; streakEl.innerText = streak;
+            if (streak === 5) { activateMultiplier(2); createFloatingText(player.x, player.y - 60, "x2!", "#00E5FF"); }
+            else if (streak === 10) { activateMultiplier(3); createFloatingText(player.x, player.y - 60, "x3!", "#FFD700"); }
+            createParticles(this.x + this.w/2, this.y + cameraY, currentTheme.particle); 
+            player.vy = 0; player.readyForSuperJump = true; this.isSolved = true; generateLevel();
+        }
+        handleWrongAnswer() { streak = 0; streakEl.innerText = streak; multiplier = 1; updateMultiplierUI(); deductLife(); }
+        draw() {
+            if (this.broken && !this.isPermanent) return; 
+            ctx.save(); ctx.translate(this.shakeOffset, 0);
+            ctx.fillStyle = this.isPermanent ? currentTheme.platformSafe : (this.breaking ? '#e74c3c' : currentTheme.platformNormal); 
+            ctx.fillRect(this.x, this.y, this.w, this.h);
+            if (!this.isPermanent) { ctx.fillStyle = 'white'; ctx.font = 'bold 20px Roboto'; ctx.textAlign = 'center'; ctx.fillText(this.value, this.x + this.w/2, this.y + 20); }
+            ctx.restore();
+        }
+    }
+
+    class BackgroundObject {
+        constructor(spawnY, type, camY) {
+            this.type = type; this.y = type === 'balloon' ? -camY + canvas.height + 50 : spawnY;
+            this.vy = type === 'balloon' ? -1 - Math.random() : (type === 'leaf' ? 1 + Math.random() : 0);
+            this.x = Math.random() * canvas.width; this.vx = (Math.random() - 0.5) * 2;
+            this.emoji = this.getEmoji(type); this.size = 20 + Math.random() * 30; this.wobble = Math.random() * 6.28;
+        }
+        getEmoji(t) {
+            const e = { 'leaf':['🍂','🍃'], 'cloud':['☁️','🌥️'], 'bird':['🐦','🦅'], 'balloon':['🎈','🪁'], 'space':['🚀','🛰️'], 'star':['⭐','✨'] };
+            return e[t][Math.floor(Math.random()*e[t].length)];
+        }
+        update() { this.x += this.vx; this.y += this.vy; this.wobble += 0.05; if (this.x > canvas.width + 50) this.x = -50; if (this.x < -50) this.x = canvas.width + 50; }
+        draw() { ctx.font = `${this.size}px Arial`; ctx.save(); ctx.translate(this.x, this.y); ctx.fillText(this.emoji, 0, 0); ctx.restore(); }
+    }
+
+    class Particle { constructor(x, y, c) { this.x=x; this.y=y; this.vx=(Math.random()-0.5)*10; this.vy=(Math.random()-0.5)*10; this.life=1.0; this.c=c; } update(){this.x+=this.vx;this.y+=this.vy;this.life-=0.05;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.beginPath();ctx.arc(this.x,this.y,5,0,6.28);ctx.fill();ctx.globalAlpha=1.0;} }
+    class FloatingText { constructor(x,y,t,c){this.x=x;this.y=y;this.t=t;this.c=c;this.life=1.0;this.vy=-2;} update(){this.y+=this.vy;this.life-=0.02;} draw(){ctx.globalAlpha=this.life;ctx.fillStyle=this.c;ctx.font='bold 24px Fredoka One';ctx.fillText(this.t,this.x,this.y);ctx.globalAlpha=1.0;} }
+
+    function activateMultiplier(v) { multiplier = v; updateMultiplierUI(); }
+    function updateMultiplierUI() { if (multiplier > 1) { multiplierEl.innerText = `x${multiplier}`; multiplierEl.classList.remove('hidden'); } else multiplierEl.classList.add('hidden'); }
+    function createParticles(x,y,c) { for(let i=0;i<15;i++) particles.push(new Particle(x,y,c)); }
+    function createFloatingText(x,y,t,c) { floatingTexts.push(new FloatingText(x,y,t,c)); }
+    
+    function manageBackground(py) {
+        const h = cameraY + (canvas.height - py); 
+        if (Math.random() < 0.008) { 
+            let t = h < 3000 ? 'cloud' : (h < 6000 ? 'bird' : 'space');
+            backgroundObjects.push(new BackgroundObject(-cameraY - 50, t, cameraY));
+        }
+        backgroundObjects = backgroundObjects.filter(o => { const sy = o.y + cameraY; return sy > -200 && sy < canvas.height + 200; });
+    }
+
+    // --- FALLBACK MOTIVATION ---
+    function getFallbackMotivation(score) {
+        const motivations = [
+            "Toll gemacht! Weiter so! 🚀",
+            "Super Leistung! Du wirst immer besser. 🌟",
+            "Mathe-Champion im Anflug! 🦅",
+            "Das war spitze! Gleich nochmal? 🔥",
+            "Übung macht den Meister! 📚",
+            "Klasse gerechnet! Bleib dran. 💪",
+            "Nicht aufgeben, du schaffst das! 🌈"
+        ];
+        return motivations[Math.floor(Math.random() * motivations.length)];
+    }
+
+    async function callGeminiLLM(q) {
+        if (!API_KEY) return null; // Fallback sofort nutzen, wenn kein Key da ist
+        const payload = { contents: [{ parts: [{ text: q }] }], systemInstruction: { parts: [{ text: "Mathelehrer. Extrem kurz. Rechentrick + Plusaufgabe. Keine Begrüßung. Max 25 Worte." }] } };
+        try { 
+            const r = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) }); 
+            const j = await r.json(); 
+            return j.candidates[0].content.parts[0].text; 
+        } catch (e) { 
+            return null; // Return null on error to trigger fallback
+        }
+    }
+
+    window.getHint = async () => {
+        if (!gameRunning || !currentProblem) return;
+        gameRunning = false; hintOverlay.classList.remove('hidden'); hintContent.innerText = "Lade Tipp...";
+        const hint = await callGeminiLLM(`Trick für ${currentProblem.text.replace(' = ?','')}`);
+        
+        // Fallback für den Tipp, falls LLM nicht geht
+        if (hint) {
+            hintContent.innerText = hint;
+        } else {
+             hintContent.innerText = "Tipp-Coach gerade in der Kaffeepause. Versuch es selbst! 😉";
+        }
+    };
+    
+    // ... existing math & game logic ...
+    const generateMathProblem = () => {
+        let t = currentDifficulty.division && Math.random() < 0.5 ? 'div' : 'mult';
+        if (t === 'mult') {
+            let a = Math.floor(Math.random() * 10) + 1, b = Math.floor(Math.random() * 10) + 1;
+            if (currentDifficulty.noOnes) { if(a===1) a=Math.floor(Math.random()*9)+2; if(b===1) b=Math.floor(Math.random()*9)+2; }
+            const ans = a * b;
+            return { text: `${a} x ${b} = ?`, correct: ans, answers: [ans, ans+5, ans-5].sort(()=>Math.random()-0.5) };
+        } else {
+            let d = Math.floor(Math.random() * 9) + 2, r = Math.floor(Math.random() * 10) + 1;
+            return { text: `${d*r} : ${d} = ?`, correct: r, answers: [r, r+2, r-2].sort(()=>Math.random()-0.5) };
+        }
+    };
+
+    const generateLevel = () => {
+        questionStartTime = Date.now(); 
+        allPlatforms = allPlatforms.filter(p => p.isPermanent || p.y + cameraY > -100);
+        currentProblem = generateMathProblem();
+        questionEl.innerText = currentProblem.text;
+        questionWrapper.classList.remove('hidden');
+        const y = nextPlatformY;
+        currentProblem.answers.forEach((ans, i) => {
+            allPlatforms.push(new Platform((canvas.width/4)*(i+1) - 75, y, ans, ans === currentProblem.correct)); 
+        });
+        nextPlatformY -= LEVEL_HEIGHT_GAP; 
+    };
+
+    const deductLife = () => { if (gameOverPending || isInvulnerable) return; lives--; livesEl.innerText = lives; isInvulnerable = true; if (lives <= 0) gameOverPending = true; };
+    const loseLifeFallback = () => {
+        deductLife();
+        if (!gameOverPending) {
+            const p = allPlatforms.find(pl => pl.isPermanent);
+            player.x = canvas.width/2 - 20; player.y = p.y - 40; cameraY = 0; player.vy = 0; player.grounded = true; isInvulnerable = false;
+        } else gameOver();
+    };
+
+    window.startGame = (idx) => {
+        currentDifficulty = DIFFICULTIES[idx];
+        score = 0; lives = 3; streak = 0; multiplier = 1; cameraY = 0;
+        allPlatforms = []; backgroundObjects = []; floatingTexts = []; gameOverPending = false; isInvulnerable = false;
+        streakEl.innerText = 0; scoreEl.innerText = 0; livesEl.innerText = 3; updateMultiplierUI();
+        const gy = canvas.height - GROUND_HEIGHT;
+        allPlatforms.push(new Platform(0, gy, 0, false, true)); allPlatforms[0].w = canvas.width;
+        player = new Player(); nextPlatformY = gy - LEVEL_HEIGHT_GAP;
+        gameRunning = true; 
+        
+        startScreen.classList.add('hidden'); 
+        generateLevel();
+        
+        // Mobile Controls aktivieren, wenn Touch ausgewählt ist
+        updateMobileControlsVisibility();
+        
+        if (!gameLoopId) loop();
+    };
+
+    async function gameOver() {
+        gameRunning = false; finalScoreEl.innerText = score;
+        
+        // Prüfen ob Highscore basierend auf Cache
+        if (isHighscore(score)) {
+            highscoreInputContainer.classList.remove('hidden'); 
+            gameOverButtons.classList.add('hidden'); 
+        } else {
+            highscoreInputContainer.classList.add('hidden'); 
+            gameOverButtons.classList.remove('hidden'); 
+        }
+
+        questionWrapper.classList.add('hidden'); 
+        gameOverScreen.classList.remove('hidden');
+        motivationTextEl.innerText = "Coach lädt...";
+        
+        // Verstecke Controls beim Game Over
+        updateMobileControlsVisibility();
+        
+        // --- MOTIVATION UPDATE ---
+        // Versuche erst LLM, bei Fehler (oder keinem Key) nimm Fallback
+        let msg = await callGeminiLLM(`Motiviere Spieler für ${score} Punkte.`);
+        if (!msg) {
+             msg = getFallbackMotivation(score);
+        }
+        motivationTextEl.innerText = msg;
+    }
+
+    function loop() {
+        gameLoopId = requestAnimationFrame(loop); ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(gameRunning) {
+            const time = Date.now() - questionStartTime;
+            document.querySelectorAll('.timer-dot').forEach((d, i) => i < 5 - Math.floor(time/1000) ? d.classList.remove('inactive') : d.classList.add('inactive'));
+            if (currentDifficulty.timeLimit > 0 && time > currentDifficulty.timeLimit && player && player.grounded) {
+                allPlatforms.forEach(p => { if (Math.abs((player.y+player.h)-p.y) < 10 && player.x+player.w > p.x && player.x < p.x+p.w && !p.breaking) p.breaking = true; });
+            }
+        }
+        if (gameRunning && player) {
+            manageBackground(player.y); player.update();
+            const climb = canvas.height * 0.4, fall = canvas.height * 0.6;
+            if (player.y < climb) { cameraY += climb - player.y; player.y = climb; }
+            else if (player.y > fall && cameraY > 0) { let d = Math.min(cameraY, player.y - fall); cameraY -= d; player.y -= d; }
+            if (player.y > canvas.height && cameraY <= 0) loseLifeFallback();
+            allPlatforms.forEach(p => p.update(player));
+            particles.forEach((p, i) => { p.update(); if(p.life <= 0) particles.splice(i, 1); });
+            floatingTexts.forEach((f, i) => { f.update(); if(f.life <= 0) floatingTexts.splice(i, 1); });
+            backgroundObjects.forEach(b => b.update());
+        }
+        ctx.save(); ctx.translate(0, cameraY); 
+        backgroundObjects.forEach(b => b.draw()); allPlatforms.forEach(p => p.draw());
+        ctx.restore(); if(player) player.draw(); particles.forEach(p => p.draw());
+        ctx.save(); ctx.translate(0, cameraY); floatingTexts.forEach(f => f.draw()); ctx.restore();
+    }
+    
+    async function readQuestion() {
+        if (!gameRunning || !currentProblem || isTTSLoading) return;
+        isTTSLoading = true; ttsBtn.classList.add('loading');
+        let t = currentProblem.text.replace('x','mal').replace(':','durch').replace('= ?','');
+        try {
+            const r = await fetch(TTS_API_URL, { method: 'POST', body: JSON.stringify({ contents: [{ parts: [{ text: `Frage: ${t}` }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } } } }) });
+            const j = await r.json();
+            const audioData = new Int16Array(base64ToArrayBuffer(j.candidates[0].content.parts[0].inlineData.data));
+            const blob = pcmToWav(audioData);
+            new Audio(URL.createObjectURL(blob)).play();
+        } catch(e) {}
+        isTTSLoading = false; ttsBtn.classList.remove('loading');
+    }
+
+    function base64ToArrayBuffer(b64) { const s = atob(b64); const len = s.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) bytes[i] = s.charCodeAt(i); return bytes.buffer; }
+    function pcmToWav(pcm) {
+        const buffer = new ArrayBuffer(44 + pcm.length * 2), view = new DataView(buffer);
+        const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+        writeString(0, 'RIFF'); view.setUint32(4, 36 + pcm.length * 2, true); writeString(8, 'WAVE');
+        writeString(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, 24000, true); view.setUint32(28, 48000, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+        writeString(36, 'data'); view.setUint32(40, pcm.length * 2, true);
+        for (let i = 0; i < pcm.length; i++) view.setInt16(44 + i * 2, pcm[i], true);
+        return new Blob([view], { type: 'audio/wav' });
+    }
+</script>
+</body>
+</html>
