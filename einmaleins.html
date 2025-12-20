@@ -195,8 +195,8 @@
         #fullscreen-btn:hover { background: rgba(0,0,0,0.6); }
 
         /* --- SPEZIALMODUS: Landscape / Kleiner Bildschirm --- */
-        /* Wir ordnen die Buttons nebeneinander an, wenn wenig Platz in der Höhe ist */
-        @media (max-height: 600px) and (orientation: landscape) {
+        /* WICHTIG: Erhöht auf 900px, damit auch iPads im Querformat (ca. 768px-834px Höhe) das Raster-Layout nutzen */
+        @media (max-height: 900px) and (orientation: landscape) {
             #difficulty-container {
                 display: grid;
                 grid-template-columns: 1fr 1fr; /* Zwei Spalten */
