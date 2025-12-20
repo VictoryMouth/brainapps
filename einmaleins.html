@@ -137,10 +137,10 @@
         #difficulty-container { 
             display: flex; 
             flex-direction: column; 
-            gap: 1.5vh; 
-            width: 85%; 
-            max-width: 450px; 
-            margin-bottom: 2vh; 
+            gap: 20px; /* Vorher 1.5vh -> Mehr Abstand */
+            width: 90%; 
+            max-width: 500px; /* Vorher 450px -> Etwas breiter */
+            margin-bottom: 3vh; 
             flex-shrink: 0; 
         }
 
@@ -148,19 +148,26 @@
         .diff-btn { 
             background: #4CAF50; 
             border: none; 
-            padding: clamp(8px, 1.8vh, 15px) 20px; 
-            font-size: clamp(0.9rem, 2.5vh, 1.3rem); 
+            padding: 20px 30px; /* Vorher clamp(...) -> Fixer, großer Abstand */
+            font-size: clamp(1.2rem, 3.5vh, 1.8rem); /* Vorher clamp(0.9...) -> Deutlich größer */
             font-family: 'Fredoka One', cursive; 
             color: white; 
-            border-radius: 10px; 
+            border-radius: 15px; /* Etwas rundere Ecken */
             cursor: pointer; 
-            box-shadow: 0 0.5vh 0 #2E7D32; 
+            box-shadow: 0 6px 0 #2E7D32; /* Etwas tieferer Schatten */
             transition: transform 0.1s, box-shadow 0.1s; 
             text-align: center; 
             position: relative; 
             width: 100%; 
         }
-        .diff-btn span { display: block; font-size: 0.8em; font-family: 'Roboto', sans-serif; font-weight: normal; opacity: 0.9; margin-top: 2px; }
+        .diff-btn span { 
+            display: block; 
+            font-size: 0.65em; /* Relativ zur neuen Button-Größe passend */
+            font-family: 'Roboto', sans-serif; 
+            font-weight: normal; 
+            opacity: 0.9; 
+            margin-top: 5px; 
+        }
         .diff-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #2E7D32; }
         .diff-1 { background: #8BC34A; box-shadow: 0 4px 0 #689F38; } 
         .diff-2 { background: #2196F3; box-shadow: 0 4px 0 #1976D2; } 
